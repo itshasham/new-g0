@@ -28,6 +28,8 @@ func main() {
 	crawlingGetCtrl := controllers.NewCrawlingSessionGetController(svc.CrawlingSessionGetter(), logger)
 	crawlingPagesCtrl := controllers.NewCrawlingSessionPagesController(svc.CrawlingSessionPages(), logger)
 	crawlingChecksCtrl := controllers.NewCrawlingSessionChecksController(svc.CrawlingSessionChecks(), logger)
+	pageDetailsCtrl := controllers.NewPageDetailsController(svc.PageDetails(), logger)
+	statsCtrl := controllers.NewStatsController(svc.Stats(), logger)
 
 	routes.Register(app, routes.Dependencies{
 		Health:                healthCtrl,
@@ -35,6 +37,8 @@ func main() {
 		CrawlingSessionGet:    crawlingGetCtrl,
 		CrawlingSessionPages:  crawlingPagesCtrl,
 		CrawlingSessionChecks: crawlingChecksCtrl,
+		PageDetails:           pageDetailsCtrl,
+		Stats:                 statsCtrl,
 	})
 
 	addr := getenv("ADDR", ":8080")

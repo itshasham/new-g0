@@ -49,3 +49,9 @@ type CheckWithPages struct {
 	Name  string `json:"name"`
 	Pages []Page `json:"pages"`
 }
+
+type PageImage struct {
+	ID     int64  `json:"id"`
+	PageID int64  `json:"page_id"`
+	URL    string `json:"url"`
+}
