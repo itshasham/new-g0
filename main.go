@@ -22,13 +22,34 @@ func main() {
 	svc := services.New(
 		services.WithHealthRepository(repository.NewNoopHealthRepository()),
 		services.WithCrawlingSessionRepository(repository.NewInMemoryCrawlingSessionRepository()),
+		services.WithAuditCheckRepository(repository.NewInMemoryAuditCheckRepository()),
 	)
 	healthCtrl := controllers.NewHealthController(svc.Health(), logger)
-	crawlingCtrl := controllers.NewCrawlingSessionController(svc.CrawlingSessions(), logger)
+	crawlingCreateCtrl := controllers.NewCrawlingSessionCreateController(svc.CrawlingSessionCreator(), logger)
+	crawlingGetCtrl := controllers.NewCrawlingSessionGetController(svc.CrawlingSessionGetter(), logger)
+	crawlingPagesCtrl := controllers.NewCrawlingSessionPagesController(svc.CrawlingSessionPages(), logger)
+	crawlingChecksCtrl := controllers.NewCrawlingSessionChecksController(svc.CrawlingSessionChecks(), logger)
+	pageDetailsCtrl := controllers.NewPageDetailsController(svc.PageDetails(), logger)
+	statsCtrl := controllers.NewStatsController(svc.Stats(), logger)
+	auditListCtrl := controllers.NewAuditCheckListController(svc.AuditCheckLister(), logger)
+	auditCreateCtrl := controllers.NewAuditCheckCreateController(svc.AuditCheckCreator(), logger)
+	auditGetCtrl := controllers.NewAuditCheckGetController(svc.AuditCheckGetter(), logger)
+	auditUpdateCtrl := controllers.NewAuditCheckUpdateController(svc.AuditCheckUpdater(), logger)
+	auditDeleteCtrl := controllers.NewAuditCheckDeleteController(svc.AuditCheckDeleter(), logger)
 
 	routes.Register(app, routes.Dependencies{
-		Health:           healthCtrl,
-		CrawlingSessions: crawlingCtrl,
+		Health:                healthCtrl,
+		CrawlingSessionCreate: crawlingCreateCtrl,
+		CrawlingSessionGet:    crawlingGetCtrl,
+		CrawlingSessionPages:  crawlingPagesCtrl,
+		CrawlingSessionChecks: crawlingChecksCtrl,
+		PageDetails:           pageDetailsCtrl,
+		Stats:                 statsCtrl,
+		AuditCheckList:        auditListCtrl,
+		AuditCheckCreate:      auditCreateCtrl,
+		AuditCheckGet:         auditGetCtrl,
+		AuditCheckUpdate:      auditUpdateCtrl,
+		AuditCheckDelete:      auditDeleteCtrl,
 	})
 
 	addr := getenv("ADDR", ":8080")

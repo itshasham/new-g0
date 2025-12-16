@@ -12,19 +12,19 @@ import (
 	"sitecrawler/newgo/internal/services"
 )
 
-type CrawlingSessionController struct {
-	service services.CrawlingSessionService
+type CrawlingSessionCreateController struct {
+	service services.CrawlingSessionCreateService
 	logger  *slog.Logger
 }
 
-func NewCrawlingSessionController(service services.CrawlingSessionService, logger *slog.Logger) *CrawlingSessionController {
+func NewCrawlingSessionCreateController(service services.CrawlingSessionCreateService, logger *slog.Logger) *CrawlingSessionCreateController {
 	if service == nil {
-		panic("crawling session service required")
+		panic("crawling session create service required")
 	}
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &CrawlingSessionController{
+	return &CrawlingSessionCreateController{
 		service: service,
 		logger:  logger,
 	}
@@ -40,8 +40,7 @@ func NewCrawlingSessionController(service services.CrawlingSessionService, logge
 // @Failure 400 {object} map[string]string
 // @Failure 422 {object} map[string]string
 // @Router /api/crawling_sessions [post]
-func (c *CrawlingSessionController) Create(ctx *fiber.Ctx) error {
-
+func (c *CrawlingSessionCreateController) Create(ctx *fiber.Ctx) error {
 	var request dto.CreateCrawlingSessionRequest
 	if err := ctx.BodyParser(&request); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
