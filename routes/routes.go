@@ -14,6 +14,11 @@ type Dependencies struct {
 	CrawlingSessionChecks *controllers.CrawlingSessionChecksController
 	PageDetails           *controllers.PageDetailsController
 	Stats                 *controllers.StatsController
+	AuditCheckList        *controllers.AuditCheckListController
+	AuditCheckCreate      *controllers.AuditCheckCreateController
+	AuditCheckGet         *controllers.AuditCheckGetController
+	AuditCheckUpdate      *controllers.AuditCheckUpdateController
+	AuditCheckDelete      *controllers.AuditCheckDeleteController
 }
 
 func Register(app *fiber.App, deps Dependencies) {
@@ -42,5 +47,21 @@ func Register(app *fiber.App, deps Dependencies) {
 	}
 	if deps.Stats != nil {
 		app.Get("/api/stats", deps.Stats.Fetch)
+	}
+
+	if deps.AuditCheckList != nil {
+		app.Get("/api/audit_checks", deps.AuditCheckList.List)
+	}
+	if deps.AuditCheckCreate != nil {
+		app.Post("/api/audit_checks", deps.AuditCheckCreate.Create)
+	}
+	if deps.AuditCheckGet != nil {
+		app.Get("/api/audit_checks/:id", deps.AuditCheckGet.Get)
+	}
+	if deps.AuditCheckUpdate != nil {
+		app.Put("/api/audit_checks/:id", deps.AuditCheckUpdate.Update)
+	}
+	if deps.AuditCheckDelete != nil {
+		app.Delete("/api/audit_checks/:id", deps.AuditCheckDelete.Delete)
 	}
 }

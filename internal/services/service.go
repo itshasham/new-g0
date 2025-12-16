@@ -16,6 +16,11 @@ type Services interface {
 	CrawlingSessionChecks() CrawlingSessionChecksService
 	PageDetails() PageDetailsService
 	Stats() StatsService
+	AuditCheckLister() AuditCheckListService
+	AuditCheckCreator() AuditCheckCreateService
+	AuditCheckGetter() AuditCheckGetService
+	AuditCheckUpdater() AuditCheckUpdateService
+	AuditCheckDeleter() AuditCheckDeleteService
 }
 
 type HealthService interface {
@@ -46,6 +51,26 @@ type StatsService interface {
 	Fetch(ctx context.Context, req dto.StatsRequest) (*dto.Response[dto.StatsResponse], error)
 }
 
+type AuditCheckListService interface {
+	List(ctx context.Context, req dto.ListAuditChecksRequest) (*dto.Response[dto.AuditChecksResponse], error)
+}
+
+type AuditCheckGetService interface {
+	Get(ctx context.Context, req dto.GetAuditCheckRequest) (*dto.Response[dto.AuditCheckResponse], error)
+}
+
+type AuditCheckCreateService interface {
+	Create(ctx context.Context, req dto.CreateAuditCheckRequest) (*dto.Response[dto.AuditCheckResponse], error)
+}
+
+type AuditCheckUpdateService interface {
+	Update(ctx context.Context, req dto.UpdateAuditCheckRequest) (*dto.Response[dto.AuditCheckResponse], error)
+}
+
+type AuditCheckDeleteService interface {
+	Delete(ctx context.Context, req dto.DeleteAuditCheckRequest) (*dto.Response[dto.DeleteAuditCheckResponse], error)
+}
+
 type service struct {
 	health          HealthService
 	crawlingCreator CrawlingSessionCreateService
@@ -54,6 +79,11 @@ type service struct {
 	crawlingChecks  CrawlingSessionChecksService
 	pageDetails     PageDetailsService
 	statsService    StatsService
+	auditLister     AuditCheckListService
+	auditCreator    AuditCheckCreateService
+	auditGetter     AuditCheckGetService
+	auditUpdater    AuditCheckUpdateService
+	auditDeleter    AuditCheckDeleteService
 
 	healthRepo          repository.HealthRepository
 	crawlingSessionRepo repository.CrawlingSessionRepository
@@ -61,6 +91,7 @@ type service struct {
 	checkRepo           repository.CrawlingSessionCheckRepository
 	pageDetailsRepo     repository.PageDetailsRepository
 	statsRepo           repository.StatsRepository
+	auditRepo           repository.AuditCheckRepository
 }
 
 // Option allows callers to configure the Services container.
@@ -91,6 +122,9 @@ func New(opts ...Option) Services {
 	if s.statsRepo == nil {
 		s.statsRepo = repository.NewNoopStatsRepository()
 	}
+	if s.auditRepo == nil {
+		s.auditRepo = repository.NewInMemoryAuditCheckRepository()
+	}
 
 	s.health = NewHealthService(s.healthRepo)
 	s.crawlingCreator = NewCrawlingSessionCreateService(s.crawlingSessionRepo)
@@ -99,6 +133,11 @@ func New(opts ...Option) Services {
 	s.crawlingChecks = NewCrawlingSessionChecksService(s.checkRepo)
 	s.pageDetails = NewPageDetailsService(s.pageDetailsRepo)
 	s.statsService = NewStatsService(s.statsRepo)
+	s.auditLister = NewAuditCheckListService(s.auditRepo)
+	s.auditCreator = NewAuditCheckCreateService(s.auditRepo)
+	s.auditGetter = NewAuditCheckGetService(s.auditRepo)
+	s.auditUpdater = NewAuditCheckUpdateService(s.auditRepo)
+	s.auditDeleter = NewAuditCheckDeleteService(s.auditRepo)
 	return s
 }
 
@@ -140,6 +179,12 @@ func WithStatsRepository(repo repository.StatsRepository) Option {
 	}
 }
 
+func WithAuditCheckRepository(repo repository.AuditCheckRepository) Option {
+	return func(s *service) {
+		s.auditRepo = repo
+	}
+}
+
 func (s *service) Health() HealthService {
 	return s.health
 }
@@ -166,4 +211,24 @@ func (s *service) PageDetails() PageDetailsService {
 
 func (s *service) Stats() StatsService {
 	return s.statsService
+}
+
+func (s *service) AuditCheckLister() AuditCheckListService {
+	return s.auditLister
+}
+
+func (s *service) AuditCheckCreator() AuditCheckCreateService {
+	return s.auditCreator
+}
+
+func (s *service) AuditCheckGetter() AuditCheckGetService {
+	return s.auditGetter
+}
+
+func (s *service) AuditCheckUpdater() AuditCheckUpdateService {
+	return s.auditUpdater
+}
+
+func (s *service) AuditCheckDeleter() AuditCheckDeleteService {
+	return s.auditDeleter
 }

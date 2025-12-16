@@ -55,3 +55,13 @@ type PageImage struct {
 	PageID int64  `json:"page_id"`
 	URL    string `json:"url"`
 }
+
+type AuditCheck struct {
+	ID                 int64
+	SearchKeywordURLID int64
+	Name               string
+	Category           string
+	FilterConfig       map[string]any
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}
