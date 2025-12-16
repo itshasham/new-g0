@@ -49,3 +49,13 @@ type CheckWithPages struct {
 	Name  string `json:"name"`
 	Pages []Page `json:"pages"`
 }
+
+type AuditCheck struct {
+	ID                 int64
+	SearchKeywordURLID int64
+	Name               string
+	Category           string
+	FilterConfig       map[string]any
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}

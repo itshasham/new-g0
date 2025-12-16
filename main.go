@@ -22,12 +22,18 @@ func main() {
 	svc := services.New(
 		services.WithHealthRepository(repository.NewNoopHealthRepository()),
 		services.WithCrawlingSessionRepository(repository.NewInMemoryCrawlingSessionRepository()),
+		services.WithAuditCheckRepository(repository.NewInMemoryAuditCheckRepository()),
 	)
 	healthCtrl := controllers.NewHealthController(svc.Health(), logger)
 	crawlingCreateCtrl := controllers.NewCrawlingSessionCreateController(svc.CrawlingSessionCreator(), logger)
 	crawlingGetCtrl := controllers.NewCrawlingSessionGetController(svc.CrawlingSessionGetter(), logger)
 	crawlingPagesCtrl := controllers.NewCrawlingSessionPagesController(svc.CrawlingSessionPages(), logger)
 	crawlingChecksCtrl := controllers.NewCrawlingSessionChecksController(svc.CrawlingSessionChecks(), logger)
+	auditListCtrl := controllers.NewAuditCheckListController(svc.AuditCheckLister(), logger)
+	auditCreateCtrl := controllers.NewAuditCheckCreateController(svc.AuditCheckCreator(), logger)
+	auditGetCtrl := controllers.NewAuditCheckGetController(svc.AuditCheckGetter(), logger)
+	auditUpdateCtrl := controllers.NewAuditCheckUpdateController(svc.AuditCheckUpdater(), logger)
+	auditDeleteCtrl := controllers.NewAuditCheckDeleteController(svc.AuditCheckDeleter(), logger)
 
 	routes.Register(app, routes.Dependencies{
 		Health:                healthCtrl,
@@ -35,6 +41,11 @@ func main() {
 		CrawlingSessionGet:    crawlingGetCtrl,
 		CrawlingSessionPages:  crawlingPagesCtrl,
 		CrawlingSessionChecks: crawlingChecksCtrl,
+		AuditCheckList:        auditListCtrl,
+		AuditCheckCreate:      auditCreateCtrl,
+		AuditCheckGet:         auditGetCtrl,
+		AuditCheckUpdate:      auditUpdateCtrl,
+		AuditCheckDelete:      auditDeleteCtrl,
 	})
 
 	addr := getenv("ADDR", ":8080")

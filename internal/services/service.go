@@ -14,6 +14,11 @@ type Services interface {
 	CrawlingSessionGetter() CrawlingSessionGetService
 	CrawlingSessionPages() CrawlingSessionPagesService
 	CrawlingSessionChecks() CrawlingSessionChecksService
+	AuditCheckLister() AuditCheckListService
+	AuditCheckCreator() AuditCheckCreateService
+	AuditCheckGetter() AuditCheckGetService
+	AuditCheckUpdater() AuditCheckUpdateService
+	AuditCheckDeleter() AuditCheckDeleteService
 }
 
 type HealthService interface {
@@ -36,17 +41,43 @@ type CrawlingSessionChecksService interface {
 	List(ctx context.Context, req dto.ListCrawlingSessionChecksRequest) (*dto.Response[dto.CrawlingSessionChecksResponse], error)
 }
 
+type AuditCheckListService interface {
+	List(ctx context.Context, req dto.ListAuditChecksRequest) (*dto.Response[dto.AuditChecksResponse], error)
+}
+
+type AuditCheckGetService interface {
+	Get(ctx context.Context, req dto.GetAuditCheckRequest) (*dto.Response[dto.AuditCheckResponse], error)
+}
+
+type AuditCheckCreateService interface {
+	Create(ctx context.Context, req dto.CreateAuditCheckRequest) (*dto.Response[dto.AuditCheckResponse], error)
+}
+
+type AuditCheckUpdateService interface {
+	Update(ctx context.Context, req dto.UpdateAuditCheckRequest) (*dto.Response[dto.AuditCheckResponse], error)
+}
+
+type AuditCheckDeleteService interface {
+	Delete(ctx context.Context, req dto.DeleteAuditCheckRequest) (*dto.Response[dto.DeleteAuditCheckResponse], error)
+}
+
 type service struct {
 	health          HealthService
 	crawlingCreator CrawlingSessionCreateService
 	crawlingGetter  CrawlingSessionGetService
 	crawlingPages   CrawlingSessionPagesService
 	crawlingChecks  CrawlingSessionChecksService
+	auditLister     AuditCheckListService
+	auditCreator    AuditCheckCreateService
+	auditGetter     AuditCheckGetService
+	auditUpdater    AuditCheckUpdateService
+	auditDeleter    AuditCheckDeleteService
 
 	healthRepo          repository.HealthRepository
 	crawlingSessionRepo repository.CrawlingSessionRepository
 	pageRepo            repository.CrawlingSessionPageRepository
 	checkRepo           repository.CrawlingSessionCheckRepository
+	auditRepo           repository.AuditCheckRepository
 }
 
 // Option allows callers to configure the Services container.
@@ -71,12 +102,20 @@ func New(opts ...Option) Services {
 	if s.checkRepo == nil {
 		s.checkRepo = repository.NewNoopCrawlingSessionCheckRepository()
 	}
+	if s.auditRepo == nil {
+		s.auditRepo = repository.NewInMemoryAuditCheckRepository()
+	}
 
 	s.health = NewHealthService(s.healthRepo)
 	s.crawlingCreator = NewCrawlingSessionCreateService(s.crawlingSessionRepo)
 	s.crawlingGetter = NewCrawlingSessionGetService(s.crawlingSessionRepo)
 	s.crawlingPages = NewCrawlingSessionPagesService(s.pageRepo)
 	s.crawlingChecks = NewCrawlingSessionChecksService(s.checkRepo)
+	s.auditLister = NewAuditCheckListService(s.auditRepo)
+	s.auditCreator = NewAuditCheckCreateService(s.auditRepo)
+	s.auditGetter = NewAuditCheckGetService(s.auditRepo)
+	s.auditUpdater = NewAuditCheckUpdateService(s.auditRepo)
+	s.auditDeleter = NewAuditCheckDeleteService(s.auditRepo)
 	return s
 }
 
@@ -106,6 +145,12 @@ func WithCrawlingSessionCheckRepository(repo repository.CrawlingSessionCheckRepo
 	}
 }
 
+func WithAuditCheckRepository(repo repository.AuditCheckRepository) Option {
+	return func(s *service) {
+		s.auditRepo = repo
+	}
+}
+
 func (s *service) Health() HealthService {
 	return s.health
 }
@@ -124,4 +169,24 @@ func (s *service) CrawlingSessionPages() CrawlingSessionPagesService {
 
 func (s *service) CrawlingSessionChecks() CrawlingSessionChecksService {
 	return s.crawlingChecks
+}
+
+func (s *service) AuditCheckLister() AuditCheckListService {
+	return s.auditLister
+}
+
+func (s *service) AuditCheckCreator() AuditCheckCreateService {
+	return s.auditCreator
+}
+
+func (s *service) AuditCheckGetter() AuditCheckGetService {
+	return s.auditGetter
+}
+
+func (s *service) AuditCheckUpdater() AuditCheckUpdateService {
+	return s.auditUpdater
+}
+
+func (s *service) AuditCheckDeleter() AuditCheckDeleteService {
+	return s.auditDeleter
 }
