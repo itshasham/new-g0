@@ -9,18 +9,18 @@ import (
 	"sitecrawler/newgo/models"
 )
 
-type crawlingSessionService struct {
+type crawlingSessionCreateService struct {
 	repo repository.CrawlingSessionRepository
 }
 
-func NewCrawlingSessionService(repo repository.CrawlingSessionRepository) CrawlingSessionService {
+func NewCrawlingSessionCreateService(repo repository.CrawlingSessionRepository) CrawlingSessionCreateService {
 	if repo == nil {
 		panic("crawling session repository required")
 	}
-	return &crawlingSessionService{repo: repo}
+	return &crawlingSessionCreateService{repo: repo}
 }
 
-func (s *crawlingSessionService) Create(ctx context.Context, req dto.CreateCrawlingSessionRequest) (*dto.Response[dto.CrawlingSessionResponse], error) {
+func (s *crawlingSessionCreateService) Create(ctx context.Context, req dto.CreateCrawlingSessionRequest) (*dto.Response[dto.CrawlingSessionResponse], error) {
 	if err := s.repo.PreventInProgress(ctx, req.Data.SearchKeywordURLID); err != nil {
 		return dto.NewResponse[dto.CrawlingSessionResponse](false, err.Error(), http.StatusUnprocessableEntity, nil), nil
 	}
