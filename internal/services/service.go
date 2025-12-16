@@ -14,6 +14,8 @@ type Services interface {
 	CrawlingSessionGetter() CrawlingSessionGetService
 	CrawlingSessionPages() CrawlingSessionPagesService
 	CrawlingSessionChecks() CrawlingSessionChecksService
+	PageDetails() PageDetailsService
+	Stats() StatsService
 	AuditCheckLister() AuditCheckListService
 	AuditCheckCreator() AuditCheckCreateService
 	AuditCheckGetter() AuditCheckGetService
@@ -39,6 +41,14 @@ type CrawlingSessionPagesService interface {
 
 type CrawlingSessionChecksService interface {
 	List(ctx context.Context, req dto.ListCrawlingSessionChecksRequest) (*dto.Response[dto.CrawlingSessionChecksResponse], error)
+}
+
+type PageDetailsService interface {
+	Details(ctx context.Context, req dto.PageDetailsRequest) (*dto.Response[dto.PageDetailsResponse], error)
+}
+
+type StatsService interface {
+	Fetch(ctx context.Context, req dto.StatsRequest) (*dto.Response[dto.StatsResponse], error)
 }
 
 type AuditCheckListService interface {
@@ -67,6 +77,8 @@ type service struct {
 	crawlingGetter  CrawlingSessionGetService
 	crawlingPages   CrawlingSessionPagesService
 	crawlingChecks  CrawlingSessionChecksService
+	pageDetails     PageDetailsService
+	statsService    StatsService
 	auditLister     AuditCheckListService
 	auditCreator    AuditCheckCreateService
 	auditGetter     AuditCheckGetService
@@ -77,6 +89,8 @@ type service struct {
 	crawlingSessionRepo repository.CrawlingSessionRepository
 	pageRepo            repository.CrawlingSessionPageRepository
 	checkRepo           repository.CrawlingSessionCheckRepository
+	pageDetailsRepo     repository.PageDetailsRepository
+	statsRepo           repository.StatsRepository
 	auditRepo           repository.AuditCheckRepository
 }
 
@@ -102,6 +116,12 @@ func New(opts ...Option) Services {
 	if s.checkRepo == nil {
 		s.checkRepo = repository.NewNoopCrawlingSessionCheckRepository()
 	}
+	if s.pageDetailsRepo == nil {
+		s.pageDetailsRepo = repository.NewNoopPageDetailsRepository()
+	}
+	if s.statsRepo == nil {
+		s.statsRepo = repository.NewNoopStatsRepository()
+	}
 	if s.auditRepo == nil {
 		s.auditRepo = repository.NewInMemoryAuditCheckRepository()
 	}
@@ -111,6 +131,8 @@ func New(opts ...Option) Services {
 	s.crawlingGetter = NewCrawlingSessionGetService(s.crawlingSessionRepo)
 	s.crawlingPages = NewCrawlingSessionPagesService(s.pageRepo)
 	s.crawlingChecks = NewCrawlingSessionChecksService(s.checkRepo)
+	s.pageDetails = NewPageDetailsService(s.pageDetailsRepo)
+	s.statsService = NewStatsService(s.statsRepo)
 	s.auditLister = NewAuditCheckListService(s.auditRepo)
 	s.auditCreator = NewAuditCheckCreateService(s.auditRepo)
 	s.auditGetter = NewAuditCheckGetService(s.auditRepo)
@@ -145,6 +167,18 @@ func WithCrawlingSessionCheckRepository(repo repository.CrawlingSessionCheckRepo
 	}
 }
 
+func WithPageDetailsRepository(repo repository.PageDetailsRepository) Option {
+	return func(s *service) {
+		s.pageDetailsRepo = repo
+	}
+}
+
+func WithStatsRepository(repo repository.StatsRepository) Option {
+	return func(s *service) {
+		s.statsRepo = repo
+	}
+}
+
 func WithAuditCheckRepository(repo repository.AuditCheckRepository) Option {
 	return func(s *service) {
 		s.auditRepo = repo
@@ -169,6 +203,14 @@ func (s *service) CrawlingSessionPages() CrawlingSessionPagesService {
 
 func (s *service) CrawlingSessionChecks() CrawlingSessionChecksService {
 	return s.crawlingChecks
+}
+
+func (s *service) PageDetails() PageDetailsService {
+	return s.pageDetails
+}
+
+func (s *service) Stats() StatsService {
+	return s.statsService
 }
 
 func (s *service) AuditCheckLister() AuditCheckListService {

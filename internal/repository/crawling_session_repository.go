@@ -11,6 +11,7 @@ import (
 
 // ErrCrawlingSessionNotFound is returned when a session cannot be located.
 var ErrCrawlingSessionNotFound = errors.New("crawling session not found")
+var ErrPageNotFound = errors.New("page not found")
 
 // CrawlingSessionRepository describes the data access needed by the service layer.
 type CrawlingSessionRepository interface {
@@ -41,6 +42,24 @@ type CrawlingSessionPageRepository interface {
 
 type CrawlingSessionCheckRepository interface {
 	ChecksWithPages(ctx context.Context, params ChecksWithPagesParams) ([]models.CheckWithPages, error)
+}
+
+type PageDetailsRepository interface {
+	GetPageByIDAndSKU(ctx context.Context, pageID, skuID int64) (*models.Page, error)
+	GetPageImages(ctx context.Context, pageID int64, limit int) ([]models.PageImage, error)
+	GetBrokenTargetsFrom(ctx context.Context, pageID int64, limit int) ([]models.Page, error)
+	GetReferrersToBroken(ctx context.Context, pageID int64, limit int) ([]models.Page, error)
+}
+
+type StatsQueryParams struct {
+	SessionID           int64
+	ComparisonSessionID *int64
+	Filters             []map[string]any
+	Prefilters          []map[string]any
+}
+
+type StatsRepository interface {
+	Fetch(ctx context.Context, params StatsQueryParams) (map[string]any, error)
 }
 
 // InMemoryCrawlingSessionRepository is a temporary implementation that stores sessions
@@ -141,4 +160,50 @@ func (r *NoopCrawlingSessionCheckRepository) ChecksWithPages(ctx context.Context
 	_ = ctx
 	_ = params
 	return nil, nil
+}
+
+type NoopPageDetailsRepository struct{}
+
+func NewNoopPageDetailsRepository() *NoopPageDetailsRepository {
+	return &NoopPageDetailsRepository{}
+}
+
+func (r *NoopPageDetailsRepository) GetPageByIDAndSKU(ctx context.Context, pageID, skuID int64) (*models.Page, error) {
+	_ = ctx
+	_ = pageID
+	_ = skuID
+	return nil, errors.New("page not found")
+}
+
+func (r *NoopPageDetailsRepository) GetPageImages(ctx context.Context, pageID int64, limit int) ([]models.PageImage, error) {
+	_ = ctx
+	_ = pageID
+	_ = limit
+	return nil, nil
+}
+
+func (r *NoopPageDetailsRepository) GetBrokenTargetsFrom(ctx context.Context, pageID int64, limit int) ([]models.Page, error) {
+	_ = ctx
+	_ = pageID
+	_ = limit
+	return nil, nil
+}
+
+func (r *NoopPageDetailsRepository) GetReferrersToBroken(ctx context.Context, pageID int64, limit int) ([]models.Page, error) {
+	_ = ctx
+	_ = pageID
+	_ = limit
+	return nil, nil
+}
+
+type NoopStatsRepository struct{}
+
+func NewNoopStatsRepository() *NoopStatsRepository {
+	return &NoopStatsRepository{}
+}
+
+func (r *NoopStatsRepository) Fetch(ctx context.Context, params StatsQueryParams) (map[string]any, error) {
+	_ = ctx
+	_ = params
+	return map[string]any{}, nil
 }

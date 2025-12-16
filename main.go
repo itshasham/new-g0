@@ -29,6 +29,8 @@ func main() {
 	crawlingGetCtrl := controllers.NewCrawlingSessionGetController(svc.CrawlingSessionGetter(), logger)
 	crawlingPagesCtrl := controllers.NewCrawlingSessionPagesController(svc.CrawlingSessionPages(), logger)
 	crawlingChecksCtrl := controllers.NewCrawlingSessionChecksController(svc.CrawlingSessionChecks(), logger)
+	pageDetailsCtrl := controllers.NewPageDetailsController(svc.PageDetails(), logger)
+	statsCtrl := controllers.NewStatsController(svc.Stats(), logger)
 	auditListCtrl := controllers.NewAuditCheckListController(svc.AuditCheckLister(), logger)
 	auditCreateCtrl := controllers.NewAuditCheckCreateController(svc.AuditCheckCreator(), logger)
 	auditGetCtrl := controllers.NewAuditCheckGetController(svc.AuditCheckGetter(), logger)
@@ -41,6 +43,8 @@ func main() {
 		CrawlingSessionGet:    crawlingGetCtrl,
 		CrawlingSessionPages:  crawlingPagesCtrl,
 		CrawlingSessionChecks: crawlingChecksCtrl,
+		PageDetails:           pageDetailsCtrl,
+		Stats:                 statsCtrl,
 		AuditCheckList:        auditListCtrl,
 		AuditCheckCreate:      auditCreateCtrl,
 		AuditCheckGet:         auditGetCtrl,
