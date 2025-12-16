@@ -1,10 +1,8 @@
 module sitecrawler/newgo
 
-go 1.24.0
+go 1.22.0
 
-toolchain go1.24.9
-
-require github.com/gofiber/fiber/v2 v2.52.8
+require github.com/gofiber/fiber/v2 v2.52.10
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
