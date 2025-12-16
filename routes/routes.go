@@ -7,8 +7,13 @@ import (
 )
 
 type Dependencies struct {
-	Health           *controllers.HealthController
-	CrawlingSessions *controllers.CrawlingSessionController
+	Health                *controllers.HealthController
+	CrawlingSessionCreate *controllers.CrawlingSessionCreateController
+	CrawlingSessionGet    *controllers.CrawlingSessionGetController
+	CrawlingSessionPages  *controllers.CrawlingSessionPagesController
+	CrawlingSessionChecks *controllers.CrawlingSessionChecksController
+	PageDetails           *controllers.PageDetailsController
+	Stats                 *controllers.StatsController
 }
 
 func Register(app *fiber.App, deps Dependencies) {
@@ -20,7 +25,22 @@ func Register(app *fiber.App, deps Dependencies) {
 	}
 
 	app.Get("/healthz", deps.Health.Health)
-	if deps.CrawlingSessions != nil {
-		app.Post("/api/crawling_sessions", deps.CrawlingSessions.Create)
+	if deps.CrawlingSessionCreate != nil {
+		app.Post("/api/crawling_sessions", deps.CrawlingSessionCreate.Create)
+	}
+	if deps.CrawlingSessionGet != nil {
+		app.Get("/api/crawling_sessions/:id", deps.CrawlingSessionGet.Get)
+	}
+	if deps.CrawlingSessionPages != nil {
+		app.Get("/api/crawling_sessions/:id/pages", deps.CrawlingSessionPages.List)
+	}
+	if deps.CrawlingSessionChecks != nil {
+		app.Get("/api/crawling_sessions/:id/checks_with_pages", deps.CrawlingSessionChecks.List)
+	}
+	if deps.PageDetails != nil {
+		app.Get("/api/pages/:id/page_details", deps.PageDetails.Details)
+	}
+	if deps.Stats != nil {
+		app.Get("/api/stats", deps.Stats.Fetch)
 	}
 }
