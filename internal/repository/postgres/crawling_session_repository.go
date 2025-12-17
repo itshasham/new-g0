@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -459,64 +461,131 @@ func NewStatsRepo(db *sql.DB) *StatsRepo {
 }
 
 func (r *StatsRepo) Fetch(ctx context.Context, params repository.StatsQueryParams) (map[string]any, error) {
-	var args []any
-	argIndex := 1
-
-	whereClause := fmt.Sprintf("crawling_session_id = $%d", argIndex)
-	args = append(args, params.SessionID)
-	argIndex++
-
-	for _, filter := range params.Prefilters {
-		for key, value := range filter {
-			whereClause += fmt.Sprintf(" AND %s = $%d", key, argIndex)
-			args = append(args, value)
-			argIndex++
-		}
-	}
-
-	for _, filter := range params.Filters {
-		for key, value := range filter {
-			whereClause += fmt.Sprintf(" AND %s = $%d", key, argIndex)
-			args = append(args, value)
-			argIndex++
-		}
-	}
-
-	query := fmt.Sprintf(`SELECT COUNT(*) as total_pages,
-		COUNT(CASE WHEN response_code >= 200 AND response_code < 300 THEN 1 END) as success_pages,
-		COUNT(CASE WHEN response_code >= 300 AND response_code < 400 THEN 1 END) as redirect_pages,
-		COUNT(CASE WHEN response_code >= 400 AND response_code < 500 THEN 1 END) as client_error_pages,
-		COUNT(CASE WHEN response_code >= 500 THEN 1 END) as server_error_pages
-		FROM pages WHERE %s`, whereClause)
-
-	var totalPages, successPages, redirectPages, clientErrorPages, serverErrorPages int
-	err := r.db.QueryRowContext(ctx, query, args...).Scan(&totalPages, &successPages, &redirectPages, &clientErrorPages, &serverErrorPages)
+	whereClause, args, err := buildPagesWherePostgres(params.SessionID, params.Prefilters, params.Filters)
 	if err != nil {
 		return nil, err
 	}
 
+	q := fmt.Sprintf(`SELECT
+		COUNT(*) AS total,
+		COUNT(*) FILTER (WHERE (og_title = '' OR og_title IS NULL OR og_description = '' OR og_description IS NULL)) AS warning,
+		COUNT(*) FILTER (WHERE (response_code >= 400 AND response_code <= 599)) AS error,
+		COUNT(*) FILTER (WHERE (response_code >= 200 AND response_code <= 299 AND redirect_code IS NULL)) AS ok,
+		COUNT(*) FILTER (WHERE (redirect_code IN ('301','302','307','308'))) AS redirection,
+		COUNT(*) FILTER (WHERE (depth = 1)) AS level1,
+		COUNT(*) FILTER (WHERE (depth = 2)) AS level2,
+		COUNT(*) FILTER (WHERE (depth = 3)) AS level3,
+		COUNT(*) FILTER (WHERE (depth = 4)) AS level4,
+		COUNT(*) FILTER (WHERE (response_code >= 200 AND response_code < 300)) AS success_pages,
+		COUNT(*) FILTER (WHERE (response_code >= 300 AND response_code < 400)) AS redirect_pages,
+		COUNT(*) FILTER (WHERE (response_code >= 400 AND response_code < 500)) AS client_error_pages,
+		COUNT(*) FILTER (WHERE (response_code >= 500)) AS server_error_pages
+		FROM pages WHERE %s`, whereClause)
+
+	var rTotal, rWarning, rError, rOK, rRedirection int
+	var rL1, rL2, rL3, rL4 int
+	var rSuccess, rResp3xx, rClientErr, rServerErr int
+	if err := r.db.QueryRowContext(ctx, q, args...).Scan(
+		&rTotal, &rWarning, &rError, &rOK, &rRedirection,
+		&rL1, &rL2, &rL3, &rL4,
+		&rSuccess, &rResp3xx, &rClientErr, &rServerErr,
+	); err != nil {
+		return nil, err
+	}
+
 	result := map[string]any{
-		"total_pages": totalPages, "success_pages": successPages, "redirect_pages": redirectPages,
-		"client_error_pages": clientErrorPages, "server_error_pages": serverErrorPages,
+		"total": rTotal, "warning": rWarning, "error": rError, "ok": rOK, "redirection": rRedirection,
+		"level1": rL1, "level2": rL2, "level3": rL3, "level4": rL4,
+		"total_pages": rTotal, "success_pages": rSuccess, "redirect_pages": rResp3xx,
+		"client_error_pages": rClientErr, "server_error_pages": rServerErr,
+	}
+
+	problematicCount, err := r.fetchProblematicCount(ctx, whereClause, args, params.SessionID)
+	if err == nil {
+		result["problematic"] = problematicCount
+		if rTotal > 0 && problematicCount > 0 {
+			result["site_health"] = 100 - (problematicCount * 100 / rTotal)
+		} else if rTotal > 0 {
+			result["site_health"] = 100
+		} else {
+			result["site_health"] = 0
+		}
 	}
 
 	if params.ComparisonSessionID != nil {
-		compQuery := `SELECT COUNT(*) as total_pages,
-			COUNT(CASE WHEN response_code >= 200 AND response_code < 300 THEN 1 END) as success_pages,
-			COUNT(CASE WHEN response_code >= 300 AND response_code < 400 THEN 1 END) as redirect_pages,
-			COUNT(CASE WHEN response_code >= 400 AND response_code < 500 THEN 1 END) as client_error_pages,
-			COUNT(CASE WHEN response_code >= 500 THEN 1 END) as server_error_pages
-			FROM pages WHERE crawling_session_id = $1`
-
-		var compTotal, compSuccess, compRedirect, compClientError, compServerError int
-		err := r.db.QueryRowContext(ctx, compQuery, *params.ComparisonSessionID).Scan(&compTotal, &compSuccess, &compRedirect, &compClientError, &compServerError)
+		cWhere, cArgs, err := buildPagesWherePostgres(*params.ComparisonSessionID, params.Prefilters, params.Filters)
 		if err == nil {
-			result["comparison"] = map[string]any{
-				"total_pages": compTotal, "success_pages": compSuccess, "redirect_pages": compRedirect,
-				"client_error_pages": compClientError, "server_error_pages": compServerError,
+			cq := fmt.Sprintf(`SELECT
+				COUNT(*) AS total,
+				COUNT(*) FILTER (WHERE (og_title = '' OR og_title IS NULL OR og_description = '' OR og_description IS NULL)) AS warning,
+				COUNT(*) FILTER (WHERE (response_code >= 400 AND response_code <= 599)) AS error,
+				COUNT(*) FILTER (WHERE (response_code >= 200 AND response_code <= 299 AND redirect_code IS NULL)) AS ok,
+				COUNT(*) FILTER (WHERE (redirect_code IN ('301','302','307','308'))) AS redirection
+				FROM pages WHERE %s`, cWhere)
+			var cTotal, cWarning, cError, cOK, cRedirection int
+			if err := r.db.QueryRowContext(ctx, cq, cArgs...).Scan(&cTotal, &cWarning, &cError, &cOK, &cRedirection); err == nil {
+				result["comparison"] = map[string]any{
+					"total": cTotal, "warning": cWarning, "error": cError, "ok": cOK, "redirection": cRedirection,
+				}
+				result["changes"] = map[string]int{
+					"total": rTotal - cTotal, "warning": rWarning - cWarning, "error": rError - cError, "ok": rOK - cOK, "redirection": rRedirection - cRedirection,
+				}
 			}
 		}
 	}
 
 	return result, nil
+}
+
+func (r *StatsRepo) fetchProblematicCount(ctx context.Context, baseWhere string, baseArgs []any, sessionID int64) (int, error) {
+	var skuID int64
+	if err := r.db.QueryRowContext(ctx, `SELECT search_keyword_url_id FROM crawling_sessions WHERE id = $1`, sessionID).Scan(&skuID); err != nil {
+		return 0, err
+	}
+
+	rows, err := r.db.QueryContext(ctx, `SELECT filter_config FROM audit_checks WHERE search_keyword_url_id = $1 AND category = 'problematic'`, skuID)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	var rawConfigs [][]byte
+	for rows.Next() {
+		var raw []byte
+		if err := rows.Scan(&raw); err != nil {
+			return 0, err
+		}
+		if len(raw) > 0 {
+			rawConfigs = append(rawConfigs, raw)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+
+	probClause, probArgs, err := buildProblematicClausePostgres(rawConfigs)
+	if err != nil || probClause == "" {
+		return 0, err
+	}
+
+	renumbered := renumberPostgresPlaceholders(probClause, len(baseArgs)+1)
+	args := append(append([]any{}, baseArgs...), probArgs...)
+	q := fmt.Sprintf("SELECT COUNT(*) FROM pages WHERE %s AND (%s)", baseWhere, renumbered)
+	var count int
+	if err := r.db.QueryRowContext(ctx, q, args...).Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func renumberPostgresPlaceholders(clause string, start int) string {
+	// buildProblematicClausePostgres uses $1..$N, but we need to append after existing args.
+	re := regexp.MustCompile(`\$(\d+)`)
+	return re.ReplaceAllStringFunc(clause, func(m string) string {
+		n, err := strconv.Atoi(strings.TrimPrefix(m, "$"))
+		if err != nil {
+			return m
+		}
+		return fmt.Sprintf("$%d", start+n-1)
+	})
 }

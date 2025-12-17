@@ -21,6 +21,12 @@ type Services interface {
 	AuditCheckGetter() AuditCheckGetService
 	AuditCheckUpdater() AuditCheckUpdateService
 	AuditCheckDeleter() AuditCheckDeleteService
+	ViewLister() ViewListService
+	ViewCreator() ViewCreateService
+	ViewGetter() ViewGetService
+	ViewUpdater() ViewUpdateService
+	ViewDeleter() ViewDeleteService
+	ViewPageCounter() ViewPageCountService
 }
 
 type HealthService interface {
@@ -71,6 +77,30 @@ type AuditCheckDeleteService interface {
 	Delete(ctx context.Context, req dto.DeleteAuditCheckRequest) (*dto.Response[dto.DeleteAuditCheckResponse], error)
 }
 
+type ViewListService interface {
+	List(ctx context.Context, req dto.ListViewsRequest) (*dto.Response[dto.ViewsResponse], error)
+}
+
+type ViewCreateService interface {
+	Create(ctx context.Context, req dto.CreateViewRequest) (*dto.Response[dto.ViewResponse], error)
+}
+
+type ViewGetService interface {
+	Get(ctx context.Context, req dto.GetViewRequest) (*dto.Response[dto.ViewResponse], error)
+}
+
+type ViewUpdateService interface {
+	Update(ctx context.Context, req dto.UpdateViewRequest) (*dto.Response[dto.ViewResponse], error)
+}
+
+type ViewDeleteService interface {
+	Delete(ctx context.Context, req dto.DeleteViewRequest) (*dto.Response[dto.DeleteViewResponse], error)
+}
+
+type ViewPageCountService interface {
+	PageCount(ctx context.Context, req dto.ViewPageCountRequest) (*dto.Response[dto.ViewPageCountResponse], error)
+}
+
 type service struct {
 	health          HealthService
 	crawlingCreator CrawlingSessionCreateService
@@ -84,6 +114,12 @@ type service struct {
 	auditGetter     AuditCheckGetService
 	auditUpdater    AuditCheckUpdateService
 	auditDeleter    AuditCheckDeleteService
+	viewLister      ViewListService
+	viewCreator     ViewCreateService
+	viewGetter      ViewGetService
+	viewUpdater     ViewUpdateService
+	viewDeleter     ViewDeleteService
+	viewPageCounter ViewPageCountService
 
 	healthRepo          repository.HealthRepository
 	crawlingSessionRepo repository.CrawlingSessionRepository
@@ -92,6 +128,7 @@ type service struct {
 	pageDetailsRepo     repository.PageDetailsRepository
 	statsRepo           repository.StatsRepository
 	auditRepo           repository.AuditCheckRepository
+	viewRepo            repository.ViewRepository
 }
 
 // Option allows callers to configure the Services container.
@@ -125,6 +162,9 @@ func New(opts ...Option) Services {
 	if s.auditRepo == nil {
 		s.auditRepo = repository.NewInMemoryAuditCheckRepository()
 	}
+	if s.viewRepo == nil {
+		s.viewRepo = repository.NewInMemoryViewRepository()
+	}
 
 	s.health = NewHealthService(s.healthRepo)
 	s.crawlingCreator = NewCrawlingSessionCreateService(s.crawlingSessionRepo)
@@ -138,6 +178,12 @@ func New(opts ...Option) Services {
 	s.auditGetter = NewAuditCheckGetService(s.auditRepo)
 	s.auditUpdater = NewAuditCheckUpdateService(s.auditRepo)
 	s.auditDeleter = NewAuditCheckDeleteService(s.auditRepo)
+	s.viewLister = NewViewListService(s.viewRepo)
+	s.viewCreator = NewViewCreateService(s.viewRepo)
+	s.viewGetter = NewViewGetService(s.viewRepo)
+	s.viewUpdater = NewViewUpdateService(s.viewRepo)
+	s.viewDeleter = NewViewDeleteService(s.viewRepo)
+	s.viewPageCounter = NewViewPageCountService(s.viewRepo, s.pageRepo)
 	return s
 }
 
@@ -231,4 +277,34 @@ func (s *service) AuditCheckUpdater() AuditCheckUpdateService {
 
 func (s *service) AuditCheckDeleter() AuditCheckDeleteService {
 	return s.auditDeleter
+}
+
+func (s *service) ViewLister() ViewListService {
+	return s.viewLister
+}
+
+func (s *service) ViewCreator() ViewCreateService {
+	return s.viewCreator
+}
+
+func (s *service) ViewGetter() ViewGetService {
+	return s.viewGetter
+}
+
+func (s *service) ViewUpdater() ViewUpdateService {
+	return s.viewUpdater
+}
+
+func (s *service) ViewDeleter() ViewDeleteService {
+	return s.viewDeleter
+}
+
+func (s *service) ViewPageCounter() ViewPageCountService {
+	return s.viewPageCounter
+}
+
+func WithViewRepository(repo repository.ViewRepository) Option {
+	return func(s *service) {
+		s.viewRepo = repo
+	}
 }
