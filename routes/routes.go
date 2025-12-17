@@ -19,6 +19,12 @@ type Dependencies struct {
 	AuditCheckGet         *controllers.AuditCheckGetController
 	AuditCheckUpdate      *controllers.AuditCheckUpdateController
 	AuditCheckDelete      *controllers.AuditCheckDeleteController
+	ViewList              *controllers.ViewListController
+	ViewCreate            *controllers.ViewCreateController
+	ViewGet               *controllers.ViewGetController
+	ViewUpdate            *controllers.ViewUpdateController
+	ViewDelete            *controllers.ViewDeleteController
+	ViewPageCount         *controllers.ViewPageCountController
 }
 
 func Register(app *fiber.App, deps Dependencies) {
@@ -63,5 +69,25 @@ func Register(app *fiber.App, deps Dependencies) {
 	}
 	if deps.AuditCheckDelete != nil {
 		app.Delete("/api/audit_checks/:id", deps.AuditCheckDelete.Delete)
+	}
+
+	// View routes
+	if deps.ViewList != nil {
+		app.Get("/api/views", deps.ViewList.List)
+	}
+	if deps.ViewCreate != nil {
+		app.Post("/api/views", deps.ViewCreate.Create)
+	}
+	if deps.ViewGet != nil {
+		app.Get("/api/views/:id", deps.ViewGet.Get)
+	}
+	if deps.ViewUpdate != nil {
+		app.Put("/api/views/:id", deps.ViewUpdate.Update)
+	}
+	if deps.ViewDelete != nil {
+		app.Delete("/api/views/:id", deps.ViewDelete.Delete)
+	}
+	if deps.ViewPageCount != nil {
+		app.Get("/api/views/:id/page_count", deps.ViewPageCount.PageCount)
 	}
 }

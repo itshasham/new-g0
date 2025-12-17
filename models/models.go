@@ -65,3 +65,12 @@ type AuditCheck struct {
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }
+
+type View struct {
+	ID                 int64
+	SearchKeywordURLID int64
+	Name               string
+	FilterConfig       map[string]any
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}

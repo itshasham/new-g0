@@ -23,6 +23,7 @@ func main() {
 		services.WithHealthRepository(repository.NewNoopHealthRepository()),
 		services.WithCrawlingSessionRepository(repository.NewInMemoryCrawlingSessionRepository()),
 		services.WithAuditCheckRepository(repository.NewInMemoryAuditCheckRepository()),
+		services.WithViewRepository(repository.NewInMemoryViewRepository()),
 	)
 	healthCtrl := controllers.NewHealthController(svc.Health(), logger)
 	crawlingCreateCtrl := controllers.NewCrawlingSessionCreateController(svc.CrawlingSessionCreator(), logger)
@@ -36,6 +37,12 @@ func main() {
 	auditGetCtrl := controllers.NewAuditCheckGetController(svc.AuditCheckGetter(), logger)
 	auditUpdateCtrl := controllers.NewAuditCheckUpdateController(svc.AuditCheckUpdater(), logger)
 	auditDeleteCtrl := controllers.NewAuditCheckDeleteController(svc.AuditCheckDeleter(), logger)
+	viewListCtrl := controllers.NewViewListController(svc.ViewLister(), logger)
+	viewCreateCtrl := controllers.NewViewCreateController(svc.ViewCreator(), logger)
+	viewGetCtrl := controllers.NewViewGetController(svc.ViewGetter(), logger)
+	viewUpdateCtrl := controllers.NewViewUpdateController(svc.ViewUpdater(), logger)
+	viewDeleteCtrl := controllers.NewViewDeleteController(svc.ViewDeleter(), logger)
+	viewPageCountCtrl := controllers.NewViewPageCountController(svc.ViewPageCounter(), logger)
 
 	routes.Register(app, routes.Dependencies{
 		Health:                healthCtrl,
@@ -50,6 +57,12 @@ func main() {
 		AuditCheckGet:         auditGetCtrl,
 		AuditCheckUpdate:      auditUpdateCtrl,
 		AuditCheckDelete:      auditDeleteCtrl,
+		ViewList:              viewListCtrl,
+		ViewCreate:            viewCreateCtrl,
+		ViewGet:               viewGetCtrl,
+		ViewUpdate:            viewUpdateCtrl,
+		ViewDelete:            viewDeleteCtrl,
+		ViewPageCount:         viewPageCountCtrl,
 	})
 
 	addr := getenv("ADDR", ":8080")
