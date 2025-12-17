@@ -238,3 +238,23 @@ func (f failingCrawlingRepo) GetByID(ctx context.Context, id int64) (*models.Cra
 	}
 	return nil, repository.ErrCrawlingSessionNotFound
 }
+
+func (f failingCrawlingRepo) ClaimPending(ctx context.Context, queueID, limit int) ([]models.CrawlingSession, error) {
+	return nil, nil
+}
+
+func (f failingCrawlingRepo) ClaimStalled(ctx context.Context, queueID int, excludeIDs []int64, limit int) ([]models.CrawlingSession, error) {
+	return nil, nil
+}
+
+func (f failingCrawlingRepo) MarkDone(ctx context.Context, id int64, reason string) error {
+	return nil
+}
+
+func (f failingCrawlingRepo) UpdateSiteInfo(ctx context.Context, id int64, info repository.SiteInfo) error {
+	return nil
+}
+
+func (f failingCrawlingRepo) UpdateProgress(ctx context.Context, id int64, d repository.ProgressDelta) error {
+	return nil
+}

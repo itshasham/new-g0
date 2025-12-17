@@ -18,6 +18,31 @@ type CrawlingSessionRepository interface {
 	PreventInProgress(ctx context.Context, skuID int64) error
 	Create(ctx context.Context, session *models.CrawlingSession) error
 	GetByID(ctx context.Context, id int64) (*models.CrawlingSession, error)
+	ClaimPending(ctx context.Context, queueID, limit int) ([]models.CrawlingSession, error)
+	ClaimStalled(ctx context.Context, queueID int, excludeIDs []int64, limit int) ([]models.CrawlingSession, error)
+	MarkDone(ctx context.Context, id int64, reason string) error
+	UpdateSiteInfo(ctx context.Context, id int64, info SiteInfo) error
+	UpdateProgress(ctx context.Context, id int64, d ProgressDelta) error
+}
+
+// SiteInfo contains site metadata from crawling
+type SiteInfo struct {
+	IPs           []string
+	DNSServers    []string
+	Aliases       []string
+	Location      string
+	Sitemap       bool
+	Robots        bool
+	SSLValid      bool
+	SSLValidUntil *time.Time
+}
+
+// ProgressDelta contains incremental progress updates
+type ProgressDelta struct {
+	IncPages          bool
+	InternalURLsDelta int
+	IgnoredURLsDelta  int
+	ExternalURLsDelta int
 }
 
 type PageListParams struct {
@@ -136,6 +161,86 @@ func (r *InMemoryCrawlingSessionRepository) GetByID(ctx context.Context, id int6
 
 	copied := *session
 	return &copied, nil
+}
+
+func (r *InMemoryCrawlingSessionRepository) ClaimPending(ctx context.Context, queueID, limit int) ([]models.CrawlingSession, error) {
+	_ = ctx
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var out []models.CrawlingSession
+	for _, s := range r.items {
+		if s.Queue == queueID && s.Status == "pending" && len(out) < limit {
+			s.Status = "processing"
+			now := time.Now().UTC()
+			s.StartedAt = &now
+			out = append(out, *s)
+		}
+	}
+	return out, nil
+}
+
+func (r *InMemoryCrawlingSessionRepository) ClaimStalled(ctx context.Context, queueID int, excludeIDs []int64, limit int) ([]models.CrawlingSession, error) {
+	_ = ctx
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	exclude := make(map[int64]bool)
+	for _, id := range excludeIDs {
+		exclude[id] = true
+	}
+	var out []models.CrawlingSession
+	for _, s := range r.items {
+		if s.Queue == queueID && s.Status == "processing" && !exclude[s.ID] && len(out) < limit {
+			now := time.Now().UTC()
+			s.StartedAt = &now
+			out = append(out, *s)
+		}
+	}
+	return out, nil
+}
+
+func (r *InMemoryCrawlingSessionRepository) MarkDone(ctx context.Context, id int64, reason string) error {
+	_ = ctx
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if s, ok := r.items[id]; ok {
+		s.Status = "done"
+		s.EndReason = reason
+		now := time.Now().UTC()
+		s.EndedAt = &now
+	}
+	return nil
+}
+
+func (r *InMemoryCrawlingSessionRepository) UpdateSiteInfo(ctx context.Context, id int64, info SiteInfo) error {
+	_ = ctx
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if s, ok := r.items[id]; ok {
+		s.IPs = info.IPs
+		s.DNSServers = info.DNSServers
+		s.Aliases = info.Aliases
+		s.Location = info.Location
+		s.Sitemap = info.Sitemap
+		s.Robots = info.Robots
+		s.SSLValid = info.SSLValid
+		s.SSLValidUntil = info.SSLValidUntil
+	}
+	return nil
+}
+
+func (r *InMemoryCrawlingSessionRepository) UpdateProgress(ctx context.Context, id int64, d ProgressDelta) error {
+	_ = ctx
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if s, ok := r.items[id]; ok {
+		if d.IncPages {
+			s.PagesCount++
+		}
+		s.InternalURLsCount += d.InternalURLsDelta
+		s.IgnoredURLsCount += d.IgnoredURLsDelta
+		s.ExternalURLsCount += d.ExternalURLsDelta
+	}
+	return nil
 }
 
 type NoopCrawlingSessionPageRepository struct{}
