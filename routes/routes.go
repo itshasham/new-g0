@@ -8,6 +8,7 @@ import (
 
 type Dependencies struct {
 	Health                *controllers.HealthController
+	Metrics               *controllers.MetricsController
 	CrawlingSessionCreate *controllers.CrawlingSessionCreateController
 	CrawlingSessionGet    *controllers.CrawlingSessionGetController
 	CrawlingSessionPages  *controllers.CrawlingSessionPagesController
@@ -36,6 +37,9 @@ func Register(app *fiber.App, deps Dependencies) {
 	}
 
 	app.Get("/healthz", deps.Health.Health)
+	if deps.Metrics != nil {
+		app.Get("/metrics", deps.Metrics.Metrics)
+	}
 	if deps.CrawlingSessionCreate != nil {
 		app.Post("/api/crawling_sessions", deps.CrawlingSessionCreate.Create)
 	}

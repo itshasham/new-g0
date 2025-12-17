@@ -26,6 +26,7 @@ func main() {
 		services.WithViewRepository(repository.NewInMemoryViewRepository()),
 	)
 	healthCtrl := controllers.NewHealthController(svc.Health(), logger)
+	metricsCtrl := controllers.NewMetricsController()
 	crawlingCreateCtrl := controllers.NewCrawlingSessionCreateController(svc.CrawlingSessionCreator(), logger)
 	crawlingGetCtrl := controllers.NewCrawlingSessionGetController(svc.CrawlingSessionGetter(), logger)
 	crawlingPagesCtrl := controllers.NewCrawlingSessionPagesController(svc.CrawlingSessionPages(), logger)
@@ -46,6 +47,7 @@ func main() {
 
 	routes.Register(app, routes.Dependencies{
 		Health:                healthCtrl,
+		Metrics:               metricsCtrl,
 		CrawlingSessionCreate: crawlingCreateCtrl,
 		CrawlingSessionGet:    crawlingGetCtrl,
 		CrawlingSessionPages:  crawlingPagesCtrl,
