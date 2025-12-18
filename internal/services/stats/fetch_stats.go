@@ -9,25 +9,6 @@ import (
 	"sitecrawler/newgo/internal/repository"
 )
 
-type service struct {
-	statsRepo       repository.StatsRepository
-	pageDetailsRepo repository.PageDetailsRepository
-}
-
-// NewService creates a new stats service.
-func NewService(statsRepo repository.StatsRepository, pageDetailsRepo repository.PageDetailsRepository) Service {
-	if statsRepo == nil {
-		panic("stats repository required")
-	}
-	if pageDetailsRepo == nil {
-		panic("page details repository required")
-	}
-	return &service{
-		statsRepo:       statsRepo,
-		pageDetailsRepo: pageDetailsRepo,
-	}
-}
-
 func (s *service) Fetch(ctx context.Context, req statsDto.StatsRequest) (*dto.Response[statsDto.StatsResponse], error) {
 	params := repository.StatsQueryParams{
 		SessionID:           req.CrawlingSessionID,

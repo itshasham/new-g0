@@ -5,7 +5,20 @@ import (
 	"sitecrawler/newgo/dto"
 
 	auditsDto "sitecrawler/newgo/dto/audits"
+	"sitecrawler/newgo/internal/repository"
 )
+
+type service struct {
+	repo repository.AuditCheckRepository
+}
+
+// NewService creates a new audit check service.
+func NewService(repo repository.AuditCheckRepository) Service {
+	if repo == nil {
+		panic("audit check repository required")
+	}
+	return &service{repo: repo}
+}
 
 // Service defines all audit check operations.
 type Service interface {

@@ -10,25 +10,6 @@ import (
 	"sitecrawler/newgo/models"
 )
 
-type service struct {
-	viewRepo repository.ViewRepository
-	pageRepo repository.CrawlingSessionPageRepository
-}
-
-// NewService creates a new view service.
-func NewService(viewRepo repository.ViewRepository, pageRepo repository.CrawlingSessionPageRepository) Service {
-	if viewRepo == nil {
-		panic("view repository required")
-	}
-	if pageRepo == nil {
-		panic("page repository required")
-	}
-	return &service{
-		viewRepo: viewRepo,
-		pageRepo: pageRepo,
-	}
-}
-
 func (s *service) List(ctx context.Context, req viewsDto.ListViewsRequest) (*dto.Response[viewsDto.ViewsResponse], error) {
 	skuID := req.SearchKeywordURLID
 	if skuID == 0 {
