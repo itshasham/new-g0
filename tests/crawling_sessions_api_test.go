@@ -1,6 +1,7 @@
 package tests
 
 import (
+sessionsDto "sitecrawler/newgo/dto/sessions"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,10 +12,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/health"
+	"sitecrawler/newgo/controllers/sessions"
 	"sitecrawler/newgo/internal/repository"
-	"sitecrawler/newgo/internal/services"
+	sessionsvc "sitecrawler/newgo/internal/services/sessions"
 	"sitecrawler/newgo/models"
 	"sitecrawler/newgo/routes"
 )
@@ -91,7 +92,7 @@ func TestCreateCrawlingSession(t *testing.T) {
 			}
 
 			if tt.expectBody {
-				var out dto.CrawlingSessionResponse
+				var out sessionsDto.CrawlingSessionResponse
 				if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 					t.Fatalf("decode response: %v", err)
 				}
@@ -136,7 +137,7 @@ func TestGetCrawlingSession(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			seed:           successSeed,
 			assertBody: func(t *testing.T, resp *http.Response) {
-				var out dto.CrawlingSessionResponse
+				var out sessionsDto.CrawlingSessionResponse
 				if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 					t.Fatalf("decode response: %v", err)
 				}
@@ -214,7 +215,7 @@ func TestListCrawlingSessionPages(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			assertBody: func(t *testing.T, resp *http.Response) {
-				var out dto.CrawlingSessionPagesResponse
+				var out sessionsDto.CrawlingSessionPagesResponse
 				if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 					t.Fatalf("decode response: %v", err)
 				}
@@ -300,7 +301,7 @@ func TestListCrawlingSessionChecks(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			assertBody: func(t *testing.T, resp *http.Response) {
-				var out dto.CrawlingSessionChecksResponse
+				var out sessionsDto.CrawlingSessionChecksResponse
 				if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 					t.Fatalf("decode response: %v", err)
 				}
@@ -399,22 +400,14 @@ func setupCrawlingSessionApp(
 	app := fiber.New()
 
 	// Health
-	healthService := services.NewHealthService(repository.NewNoopHealthRepository())
-	healthController := controllers.NewHealthController(healthService, nil)
+	healthController := health.NewController(nil)
 
-	// Crawling session create/get
-	crawlingCreateService := services.NewCrawlingSessionCreateService(sessionRepo)
-	crawlingCreateController := controllers.NewCrawlingSessionCreateController(crawlingCreateService, nil)
-	crawlingGetService := services.NewCrawlingSessionGetService(sessionRepo)
-	crawlingGetController := controllers.NewCrawlingSessionGetController(crawlingGetService, nil)
-
-	// Pages
-	pagesService := services.NewCrawlingSessionPagesService(pageRepo)
-	pagesController := controllers.NewCrawlingSessionPagesController(pagesService, nil)
-
-	// Checks
-	checksService := services.NewCrawlingSessionChecksService(checkRepo)
-	checksController := controllers.NewCrawlingSessionChecksController(checksService, nil)
+	// Crawling session service using unified service
+	sessionService := sessionsvc.NewService(sessionRepo, pageRepo, checkRepo)
+	crawlingCreateController := sessions.NewCreateController(sessionService, nil)
+	crawlingGetController := sessions.NewGetController(sessionService, nil)
+	pagesController := sessions.NewPagesController(sessionService, nil)
+	checksController := sessions.NewChecksController(sessionService, nil)
 
 	routes.Register(app, routes.Dependencies{
 		Health:                healthController,

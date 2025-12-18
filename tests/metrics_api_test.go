@@ -9,7 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
+	"sitecrawler/newgo/controllers/stats"
 )
 
 func TestMetricsEndpoint(t *testing.T) {
@@ -93,7 +93,8 @@ func TestMetricsContentType(t *testing.T) {
 func setupMetricsApp() *fiber.App {
 	app := fiber.New()
 
-	metricsCtrl := controllers.NewMetricsController()
+	// Use new stats package
+	metricsCtrl := stats.NewMetricsController()
 
 	// Register metrics route directly without going through full deps
 	app.Get("/metrics", metricsCtrl.Metrics)

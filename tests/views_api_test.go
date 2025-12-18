@@ -1,6 +1,7 @@
 package tests
 
 import (
+viewsDto "sitecrawler/newgo/dto/views"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,15 +12,14 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/health"
+	"sitecrawler/newgo/controllers/views"
 	"sitecrawler/newgo/internal/repository"
-	"sitecrawler/newgo/internal/services"
+	viewsvc "sitecrawler/newgo/internal/services/views"
 	"sitecrawler/newgo/models"
 	"sitecrawler/newgo/routes"
 )
 
-// TestViewsCRUD tests the complete Create, Read, Update, List, Delete lifecycle
 func TestViewsCRUD(t *testing.T) {
 	t.Parallel()
 
@@ -37,7 +37,7 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusCreated, createResp.StatusCode)
 	}
 
-	var created dto.ViewResponse
+	var created viewsDto.ViewResponse
 	if err := json.NewDecoder(createResp.Body).Decode(&created); err != nil {
 		t.Fatalf("decode create response: %v", err)
 	}
@@ -45,7 +45,6 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected created id")
 	}
 
-	// Get
 	getReq := httptest.NewRequest(http.MethodGet, "/api/views/1", nil)
 	getResp, err := app.Test(getReq)
 	if err != nil {
@@ -55,7 +54,7 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, getResp.StatusCode)
 	}
 
-	var got dto.ViewResponse
+	var got viewsDto.ViewResponse
 	if err := json.NewDecoder(getResp.Body).Decode(&got); err != nil {
 		t.Fatalf("decode get response: %v", err)
 	}
@@ -63,7 +62,6 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected name view-1 got %s", got.Data.Name)
 	}
 
-	// Update
 	updateBody := `{"data":{"name":"view-2"}}`
 	updateReq := httptest.NewRequest(http.MethodPut, "/api/views/1", strings.NewReader(updateBody))
 	updateReq.Header.Set("Content-Type", "application/json")
@@ -75,7 +73,7 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, updateResp.StatusCode)
 	}
 
-	var updated dto.ViewResponse
+	var updated viewsDto.ViewResponse
 	if err := json.NewDecoder(updateResp.Body).Decode(&updated); err != nil {
 		t.Fatalf("decode update response: %v", err)
 	}
@@ -83,7 +81,6 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected name view-2 got %s", updated.Data.Name)
 	}
 
-	// List
 	listReq := httptest.NewRequest(http.MethodGet, "/api/views?search_keyword_url_id=123", nil)
 	listResp, err := app.Test(listReq)
 	if err != nil {
@@ -93,7 +90,7 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, listResp.StatusCode)
 	}
 
-	var listed dto.ViewsResponse
+	var listed viewsDto.ViewsResponse
 	if err := json.NewDecoder(listResp.Body).Decode(&listed); err != nil {
 		t.Fatalf("decode list response: %v", err)
 	}
@@ -111,7 +108,7 @@ func TestViewsCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, deleteResp.StatusCode)
 	}
 
-	var deleted dto.DeleteViewResponse
+	var deleted viewsDto.DeleteViewResponse
 	if err := json.NewDecoder(deleteResp.Body).Decode(&deleted); err != nil {
 		t.Fatalf("decode delete response: %v", err)
 	}
@@ -120,7 +117,6 @@ func TestViewsCRUD(t *testing.T) {
 	}
 }
 
-// TestViewsListEmptyOnMissingSKU verifies list returns empty array when search_keyword_url_id is missing/zero
 func TestViewsListEmptyOnMissingSKU(t *testing.T) {
 	t.Parallel()
 
@@ -395,7 +391,7 @@ func TestViewsCreateVariations(t *testing.T) {
 				t.Fatalf("expected status %d got %d", tt.wantCode, resp.StatusCode)
 			}
 			if tt.wantHasID {
-				var created dto.ViewResponse
+				var created viewsDto.ViewResponse
 				if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
 					t.Fatalf("decode response: %v", err)
 				}
@@ -456,7 +452,7 @@ func TestViewsUpdateVariations(t *testing.T) {
 				t.Fatalf("expected status %d got %d", http.StatusOK, resp.StatusCode)
 			}
 
-			var updated dto.ViewResponse
+			var updated viewsDto.ViewResponse
 			if err := json.NewDecoder(resp.Body).Decode(&updated); err != nil {
 				t.Fatalf("decode response: %v", err)
 			}
@@ -532,24 +528,19 @@ func setupViewApp(factory func() repository.ViewRepository, seed func(*repositor
 
 	app := fiber.New()
 
-	healthService := services.NewHealthService(repository.NewNoopHealthRepository())
-	healthController := controllers.NewHealthController(healthService, nil)
+	healthController := health.NewController(nil)
 
-	listService := services.NewViewListService(viewRepo)
-	getService := services.NewViewGetService(viewRepo)
-	createService := services.NewViewCreateService(viewRepo)
-	updateService := services.NewViewUpdateService(viewRepo)
-	deleteService := services.NewViewDeleteService(viewRepo)
-	pageCountService := services.NewViewPageCountService(viewRepo, pageRepo)
+	// Use unified views service
+	viewService := viewsvc.NewService(viewRepo, pageRepo)
 
 	routes.Register(app, routes.Dependencies{
 		Health:        healthController,
-		ViewList:      controllers.NewViewListController(listService, nil),
-		ViewGet:       controllers.NewViewGetController(getService, nil),
-		ViewCreate:    controllers.NewViewCreateController(createService, nil),
-		ViewUpdate:    controllers.NewViewUpdateController(updateService, nil),
-		ViewDelete:    controllers.NewViewDeleteController(deleteService, nil),
-		ViewPageCount: controllers.NewViewPageCountController(pageCountService, nil),
+		ViewList:      views.NewListController(viewService, nil),
+		ViewGet:       views.NewGetController(viewService, nil),
+		ViewCreate:    views.NewCreateController(viewService, nil),
+		ViewUpdate:    views.NewUpdateController(viewService, nil),
+		ViewDelete:    views.NewDeleteController(viewService, nil),
+		ViewPageCount: views.NewPageCountController(viewService, nil),
 	})
 
 	return app

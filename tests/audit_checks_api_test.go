@@ -1,6 +1,7 @@
 package tests
 
 import (
+auditsDto "sitecrawler/newgo/dto/audits"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,10 +12,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/audits"
+	"sitecrawler/newgo/controllers/health"
 	"sitecrawler/newgo/internal/repository"
-	"sitecrawler/newgo/internal/services"
+	auditsvc "sitecrawler/newgo/internal/services/audits"
 	"sitecrawler/newgo/models"
 	"sitecrawler/newgo/routes"
 )
@@ -35,7 +36,7 @@ func TestAuditChecksCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusCreated, createResp.StatusCode)
 	}
 
-	var created dto.AuditCheckResponse
+	var created auditsDto.AuditCheckResponse
 	if err := json.NewDecoder(createResp.Body).Decode(&created); err != nil {
 		t.Fatalf("decode create response: %v", err)
 	}
@@ -52,7 +53,7 @@ func TestAuditChecksCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, getResp.StatusCode)
 	}
 
-	var got dto.AuditCheckResponse
+	var got auditsDto.AuditCheckResponse
 	if err := json.NewDecoder(getResp.Body).Decode(&got); err != nil {
 		t.Fatalf("decode get response: %v", err)
 	}
@@ -71,7 +72,7 @@ func TestAuditChecksCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, updateResp.StatusCode)
 	}
 
-	var updated dto.AuditCheckResponse
+	var updated auditsDto.AuditCheckResponse
 	if err := json.NewDecoder(updateResp.Body).Decode(&updated); err != nil {
 		t.Fatalf("decode update response: %v", err)
 	}
@@ -88,7 +89,7 @@ func TestAuditChecksCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, listResp.StatusCode)
 	}
 
-	var listed dto.AuditChecksResponse
+	var listed auditsDto.AuditChecksResponse
 	if err := json.NewDecoder(listResp.Body).Decode(&listed); err != nil {
 		t.Fatalf("decode list response: %v", err)
 	}
@@ -105,7 +106,7 @@ func TestAuditChecksCRUD(t *testing.T) {
 		t.Fatalf("expected status %d got %d", http.StatusOK, deleteResp.StatusCode)
 	}
 
-	var deleted dto.DeleteAuditCheckResponse
+	var deleted auditsDto.DeleteAuditCheckResponse
 	if err := json.NewDecoder(deleteResp.Body).Decode(&deleted); err != nil {
 		t.Fatalf("decode delete response: %v", err)
 	}
@@ -226,22 +227,18 @@ func setupAuditApp(factory func() repository.AuditCheckRepository, seed func(*re
 
 	app := fiber.New()
 
-	healthService := services.NewHealthService(repository.NewNoopHealthRepository())
-	healthController := controllers.NewHealthController(healthService, nil)
+	healthController := health.NewController(nil)
 
-	listService := services.NewAuditCheckListService(repo)
-	getService := services.NewAuditCheckGetService(repo)
-	createService := services.NewAuditCheckCreateService(repo)
-	updateService := services.NewAuditCheckUpdateService(repo)
-	deleteService := services.NewAuditCheckDeleteService(repo)
+	// Use unified service
+	auditService := auditsvc.NewService(repo)
 
 	routes.Register(app, routes.Dependencies{
 		Health:           healthController,
-		AuditCheckList:   controllers.NewAuditCheckListController(listService, nil),
-		AuditCheckGet:    controllers.NewAuditCheckGetController(getService, nil),
-		AuditCheckCreate: controllers.NewAuditCheckCreateController(createService, nil),
-		AuditCheckUpdate: controllers.NewAuditCheckUpdateController(updateService, nil),
-		AuditCheckDelete: controllers.NewAuditCheckDeleteController(deleteService, nil),
+		AuditCheckList:   audits.NewListController(auditService, nil),
+		AuditCheckGet:    audits.NewGetController(auditService, nil),
+		AuditCheckCreate: audits.NewCreateController(auditService, nil),
+		AuditCheckUpdate: audits.NewUpdateController(auditService, nil),
+		AuditCheckDelete: audits.NewDeleteController(auditService, nil),
 	})
 
 	return app

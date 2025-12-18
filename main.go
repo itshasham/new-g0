@@ -9,9 +9,16 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
+	"sitecrawler/newgo/controllers/audits"
+	"sitecrawler/newgo/controllers/health"
+	"sitecrawler/newgo/controllers/sessions"
+	"sitecrawler/newgo/controllers/stats"
+	"sitecrawler/newgo/controllers/views"
 	"sitecrawler/newgo/internal/repository"
-	"sitecrawler/newgo/internal/services"
+	auditsvc "sitecrawler/newgo/internal/services/audits"
+	sessionsvc "sitecrawler/newgo/internal/services/sessions"
+	statssvc "sitecrawler/newgo/internal/services/stats"
+	viewsvc "sitecrawler/newgo/internal/services/views"
 	"sitecrawler/newgo/routes"
 )
 
@@ -19,31 +26,47 @@ func main() {
 	app := fiber.New()
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	svc := services.New(
-		services.WithHealthRepository(repository.NewNoopHealthRepository()),
-		services.WithCrawlingSessionRepository(repository.NewInMemoryCrawlingSessionRepository()),
-		services.WithAuditCheckRepository(repository.NewInMemoryAuditCheckRepository()),
-		services.WithViewRepository(repository.NewInMemoryViewRepository()),
-	)
-	healthCtrl := controllers.NewHealthController(svc.Health(), logger)
-	metricsCtrl := controllers.NewMetricsController()
-	crawlingCreateCtrl := controllers.NewCrawlingSessionCreateController(svc.CrawlingSessionCreator(), logger)
-	crawlingGetCtrl := controllers.NewCrawlingSessionGetController(svc.CrawlingSessionGetter(), logger)
-	crawlingPagesCtrl := controllers.NewCrawlingSessionPagesController(svc.CrawlingSessionPages(), logger)
-	crawlingChecksCtrl := controllers.NewCrawlingSessionChecksController(svc.CrawlingSessionChecks(), logger)
-	pageDetailsCtrl := controllers.NewPageDetailsController(svc.PageDetails(), logger)
-	statsCtrl := controllers.NewStatsController(svc.Stats(), logger)
-	auditListCtrl := controllers.NewAuditCheckListController(svc.AuditCheckLister(), logger)
-	auditCreateCtrl := controllers.NewAuditCheckCreateController(svc.AuditCheckCreator(), logger)
-	auditGetCtrl := controllers.NewAuditCheckGetController(svc.AuditCheckGetter(), logger)
-	auditUpdateCtrl := controllers.NewAuditCheckUpdateController(svc.AuditCheckUpdater(), logger)
-	auditDeleteCtrl := controllers.NewAuditCheckDeleteController(svc.AuditCheckDeleter(), logger)
-	viewListCtrl := controllers.NewViewListController(svc.ViewLister(), logger)
-	viewCreateCtrl := controllers.NewViewCreateController(svc.ViewCreator(), logger)
-	viewGetCtrl := controllers.NewViewGetController(svc.ViewGetter(), logger)
-	viewUpdateCtrl := controllers.NewViewUpdateController(svc.ViewUpdater(), logger)
-	viewDeleteCtrl := controllers.NewViewDeleteController(svc.ViewDeleter(), logger)
-	viewPageCountCtrl := controllers.NewViewPageCountController(svc.ViewPageCounter(), logger)
+	// Initialize repositories
+	crawlingSessionRepo := repository.NewInMemoryCrawlingSessionRepository()
+	pageRepo := repository.NewNoopCrawlingSessionPageRepository()
+	checkRepo := repository.NewNoopCrawlingSessionCheckRepository()
+	auditRepo := repository.NewInMemoryAuditCheckRepository()
+	viewRepo := repository.NewInMemoryViewRepository()
+	statsRepo := repository.NewNoopStatsRepository()
+	pageDetailsRepo := repository.NewNoopPageDetailsRepository()
+
+	// Health controller
+	healthCtrl := health.NewController(logger)
+
+	// Crawling session service and controllers
+	sessionSvc := sessionsvc.NewService(crawlingSessionRepo, pageRepo, checkRepo)
+	crawlingCreateCtrl := sessions.NewCreateController(sessionSvc, logger)
+	crawlingGetCtrl := sessions.NewGetController(sessionSvc, logger)
+	crawlingPagesCtrl := sessions.NewPagesController(sessionSvc, logger)
+	crawlingChecksCtrl := sessions.NewChecksController(sessionSvc, logger)
+
+	// Audit check service and controllers
+	auditSvc := auditsvc.NewService(auditRepo)
+	auditListCtrl := audits.NewListController(auditSvc, logger)
+	auditCreateCtrl := audits.NewCreateController(auditSvc, logger)
+	auditGetCtrl := audits.NewGetController(auditSvc, logger)
+	auditUpdateCtrl := audits.NewUpdateController(auditSvc, logger)
+	auditDeleteCtrl := audits.NewDeleteController(auditSvc, logger)
+
+	// View service and controllers
+	viewSvc := viewsvc.NewService(viewRepo, pageRepo)
+	viewListCtrl := views.NewListController(viewSvc, logger)
+	viewCreateCtrl := views.NewCreateController(viewSvc, logger)
+	viewGetCtrl := views.NewGetController(viewSvc, logger)
+	viewUpdateCtrl := views.NewUpdateController(viewSvc, logger)
+	viewDeleteCtrl := views.NewDeleteController(viewSvc, logger)
+	viewPageCountCtrl := views.NewPageCountController(viewSvc, logger)
+
+	// Stats service and controllers
+	statsSvc := statssvc.NewService(statsRepo, pageDetailsRepo)
+	metricsCtrl := stats.NewMetricsController()
+	statsCtrl := stats.NewStatsController(statsSvc, logger)
+	pageDetailsCtrl := stats.NewPageDetailsController(statsSvc, logger)
 
 	routes.Register(app, routes.Dependencies{
 		Health:                healthCtrl,

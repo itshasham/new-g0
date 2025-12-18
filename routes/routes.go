@@ -3,29 +3,33 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
+	"sitecrawler/newgo/controllers/audits"
+	"sitecrawler/newgo/controllers/health"
+	"sitecrawler/newgo/controllers/sessions"
+	"sitecrawler/newgo/controllers/stats"
+	"sitecrawler/newgo/controllers/views"
 )
 
 type Dependencies struct {
-	Health                *controllers.HealthController
-	Metrics               *controllers.MetricsController
-	CrawlingSessionCreate *controllers.CrawlingSessionCreateController
-	CrawlingSessionGet    *controllers.CrawlingSessionGetController
-	CrawlingSessionPages  *controllers.CrawlingSessionPagesController
-	CrawlingSessionChecks *controllers.CrawlingSessionChecksController
-	PageDetails           *controllers.PageDetailsController
-	Stats                 *controllers.StatsController
-	AuditCheckList        *controllers.AuditCheckListController
-	AuditCheckCreate      *controllers.AuditCheckCreateController
-	AuditCheckGet         *controllers.AuditCheckGetController
-	AuditCheckUpdate      *controllers.AuditCheckUpdateController
-	AuditCheckDelete      *controllers.AuditCheckDeleteController
-	ViewList              *controllers.ViewListController
-	ViewCreate            *controllers.ViewCreateController
-	ViewGet               *controllers.ViewGetController
-	ViewUpdate            *controllers.ViewUpdateController
-	ViewDelete            *controllers.ViewDeleteController
-	ViewPageCount         *controllers.ViewPageCountController
+	Health                *health.Controller
+	Metrics               *stats.MetricsController
+	CrawlingSessionCreate *sessions.CreateController
+	CrawlingSessionGet    *sessions.GetController
+	CrawlingSessionPages  *sessions.PagesController
+	CrawlingSessionChecks *sessions.ChecksController
+	PageDetails           *stats.PageDetailsController
+	Stats                 *stats.StatsController
+	AuditCheckList        *audits.ListController
+	AuditCheckCreate      *audits.CreateController
+	AuditCheckGet         *audits.GetController
+	AuditCheckUpdate      *audits.UpdateController
+	AuditCheckDelete      *audits.DeleteController
+	ViewList              *views.ListController
+	ViewCreate            *views.CreateController
+	ViewGet               *views.GetController
+	ViewUpdate            *views.UpdateController
+	ViewDelete            *views.DeleteController
+	ViewPageCount         *views.PageCountController
 }
 
 func Register(app *fiber.App, deps Dependencies) {

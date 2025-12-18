@@ -1,6 +1,7 @@
 package tests
 
 import (
+statsDto "sitecrawler/newgo/dto/stats"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,10 +11,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/health"
+	"sitecrawler/newgo/controllers/stats"
 	"sitecrawler/newgo/internal/repository"
-	"sitecrawler/newgo/internal/services"
+	statssvc "sitecrawler/newgo/internal/services/stats"
 	"sitecrawler/newgo/models"
 	"sitecrawler/newgo/routes"
 )
@@ -42,7 +43,7 @@ func TestPageDetails(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			assertBody: func(t *testing.T, resp *http.Response) {
-				var out dto.PageDetailsResponse
+				var out statsDto.PageDetailsResponse
 				if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 					t.Fatalf("decode: %v", err)
 				}
@@ -68,7 +69,7 @@ func TestPageDetails(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			assertBody: func(t *testing.T, resp *http.Response) {
-				var out dto.PageDetailsResponse
+				var out statsDto.PageDetailsResponse
 				if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 					t.Fatalf("decode: %v", err)
 				}
@@ -132,15 +133,15 @@ func TestPageDetails(t *testing.T) {
 func setupPageDetailsApp(repo repository.PageDetailsRepository) *fiber.App {
 	app := fiber.New()
 
-	healthService := services.NewHealthService(repository.NewNoopHealthRepository())
-	healthController := controllers.NewHealthController(healthService, nil)
+	healthController := health.NewController(nil)
 
 	if repo == nil {
 		repo = fakePageDetailsRepo{}
 	}
 
-	service := services.NewPageDetailsService(repo)
-	controller := controllers.NewPageDetailsController(service, nil)
+	// Use unified stats service
+	service := statssvc.NewService(repository.NewNoopStatsRepository(), repo)
+	controller := stats.NewPageDetailsController(service, nil)
 
 	routes.Register(app, routes.Dependencies{
 		Health:      healthController,
