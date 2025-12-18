@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	statsDto "sitecrawler/newgo/dto/stats"
+	statsDto "sitecrawler/newgo/controllers/dto/stats"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) Details(ctx context.Context, req statsDto.PageDetailsRequest) (*dto.Response[statsDto.PageDetailsResponse], error) {
+func (s *Client) Details(ctx context.Context, req statsDto.PageDetailsRequest) (*dto.Response[statsDto.PageDetailsResponse], error) {
 	limit := req.Limit
 	if limit <= 0 {
 		limit = 100

@@ -1,45 +1,38 @@
 package audits
 
 import (
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"sitecrawler/newgo/internal/services/audits"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type GetController struct {
-	service audits.Service
-	logger  *slog.Logger
-}
-
-func NewGetController(service audits.Service, logger *slog.Logger) *GetController {
+func GetAuditCheckHandler(service audits.Service) fiber.Handler {
 	if service == nil {
-		panic("audit check get service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &GetController{service: service, logger: logger}
-}
-
-func (c *GetController) Get(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		panic("audit check service required")
 	}
 
-	resp, err := c.service.Get(ctx.Context(), auditsDto.GetAuditCheckRequest{ID: id})
-	if err != nil {
-		c.logger.Error("audit check get failed", "error", err, "id", id)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.Get(c.Context(), auditsDto.GetAuditCheckRequest{ID: id})
+		if err != nil {
+			logger.Error(c.UserContext(), "audit check get failed", logger.Fields{
+				logger.FieldError: err.Error(),
+				"id":              id,
+			})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

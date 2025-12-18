@@ -2,30 +2,11 @@ package views
 
 import (
 	"context"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 	"sitecrawler/newgo/internal/repository"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 )
-
-type service struct {
-	viewRepo repository.ViewRepository
-	pageRepo repository.CrawlingSessionPageRepository
-}
-
-// NewService creates a new view service.
-func NewService(viewRepo repository.ViewRepository, pageRepo repository.CrawlingSessionPageRepository) Service {
-	if viewRepo == nil {
-		panic("view repository required")
-	}
-	if pageRepo == nil {
-		panic("page repository required")
-	}
-	return &service{
-		viewRepo: viewRepo,
-		pageRepo: pageRepo,
-	}
-}
 
 // Service defines all view operations.
 type Service interface {
@@ -35,4 +16,42 @@ type Service interface {
 	Update(ctx context.Context, req viewsDto.UpdateViewRequest) (*dto.Response[viewsDto.ViewResponse], error)
 	Delete(ctx context.Context, req viewsDto.DeleteViewRequest) (*dto.Response[viewsDto.DeleteViewResponse], error)
 	PageCount(ctx context.Context, req viewsDto.ViewPageCountRequest) (*dto.Response[viewsDto.ViewPageCountResponse], error)
+}
+
+type Client struct {
+	viewRepo repository.ViewRepository
+	pageRepo repository.CrawlingSessionPageRepository
+}
+
+type Option func(s *Client)
+
+// NewService creates a new view service.
+func NewService(opts ...Option) Service {
+	client := &Client{}
+	client.WithOptions(opts...)
+	if client.viewRepo == nil {
+		panic("view repository required")
+	}
+	if client.pageRepo == nil {
+		panic("page repository required")
+	}
+	return client
+}
+
+func (c *Client) WithOptions(opts ...Option) {
+	for _, opt := range opts {
+		opt(c)
+	}
+}
+
+func WithViewRepository(repo repository.ViewRepository) Option {
+	return func(c *Client) {
+		c.viewRepo = repo
+	}
+}
+
+func WithPageRepository(repo repository.CrawlingSessionPageRepository) Option {
+	return func(c *Client) {
+		c.pageRepo = repo
+	}
 }

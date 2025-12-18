@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) Update(ctx context.Context, req viewsDto.UpdateViewRequest) (*dto.Response[viewsDto.ViewResponse], error) {
+func (s *Client) Update(ctx context.Context, req viewsDto.UpdateViewRequest) (*dto.Response[viewsDto.ViewResponse], error) {
 	existing, err := s.viewRepo.Get(ctx, req.ID)
 	if err != nil {
 		if errors.Is(err, repository.ErrViewNotFound) {

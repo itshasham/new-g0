@@ -2,45 +2,35 @@ package audits
 
 import (
 	"errors"
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"sitecrawler/newgo/internal/services/audits"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type ListController struct {
-	service audits.Service
-	logger  *slog.Logger
-}
-
-func NewListController(service audits.Service, logger *slog.Logger) *ListController {
+func ListAuditChecksHandler(service audits.Service) fiber.Handler {
 	if service == nil {
-		panic("audit check list service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &ListController{service: service, logger: logger}
-}
-
-func (c *ListController) List(ctx *fiber.Ctx) error {
-	skuID, err := strconv.ParseInt(ctx.Query("search_keyword_url_id"), 10, 64)
-	if err != nil || skuID == 0 {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": errors.New("missing search_keyword_url_id").Error()})
+		panic("audit check service required")
 	}
 
-	resp, err := c.service.List(ctx.Context(), auditsDto.ListAuditChecksRequest{SearchKeywordURLID: skuID})
-	if err != nil {
-		c.logger.Error("audit check list failed", "error", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+	return func(c *fiber.Ctx) error {
+		skuID, err := strconv.ParseInt(c.Query("search_keyword_url_id"), 10, 64)
+		if err != nil || skuID == 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors.New("missing search_keyword_url_id").Error()})
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.List(c.Context(), auditsDto.ListAuditChecksRequest{SearchKeywordURLID: skuID})
+		if err != nil {
+			logger.Error(c.UserContext(), "audit check list failed", logger.Fields{logger.FieldError: err.Error()})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

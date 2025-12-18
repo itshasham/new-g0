@@ -3,12 +3,12 @@ package views
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 )
 
-func (s *service) Get(ctx context.Context, req viewsDto.GetViewRequest) (*dto.Response[viewsDto.ViewResponse], error) {
+func (s *Client) Get(ctx context.Context, req viewsDto.GetViewRequest) (*dto.Response[viewsDto.ViewResponse], error) {
 	view, err := s.viewRepo.Get(ctx, req.ID)
 	if err != nil {
 		// Return 404 for any error (including repository failures)

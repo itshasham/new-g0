@@ -1,33 +1,14 @@
 package sessions
 
 import (
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	sessionsDto "sitecrawler/newgo/dto/sessions"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/internal/services/sessions"
+	"sitecrawler/newgo/utils/logger"
 )
-
-type GetController struct {
-	service sessions.Service
-	logger  *slog.Logger
-}
-
-func NewGetController(service sessions.Service, logger *slog.Logger) *GetController {
-	if service == nil {
-		panic("crawling session get service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &GetController{
-		service: service,
-		logger:  logger,
-	}
-}
 
 // @Summary Get crawling session
 // @Description Fetches a crawling session by ID
@@ -38,22 +19,30 @@ func NewGetController(service sessions.Service, logger *slog.Logger) *GetControl
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /api/crawling_sessions/{id} [get]
-func (c *GetController) Get(ctx *fiber.Ctx) error {
-	idParam := ctx.Params("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+func GetCrawlingSessionHandler(service sessions.Service) fiber.Handler {
+	if service == nil {
+		panic("crawling session service required")
 	}
 
-	req := sessionsDto.GetCrawlingSessionRequest{ID: id}
-	resp, err := c.service.Get(ctx.Context(), req)
-	if err != nil {
-		c.logger.Error("crawling session fetch failed", "error", err, "id", id)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		req := sessionsDto.GetCrawlingSessionRequest{ID: id}
+		resp, err := service.Get(c.Context(), req)
+		if err != nil {
+			logger.Error(c.UserContext(), "crawling session fetch failed", logger.Fields{
+				logger.FieldError: err.Error(),
+				"id":              id,
+			})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

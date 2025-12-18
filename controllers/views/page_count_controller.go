@@ -2,50 +2,40 @@ package views
 
 import (
 	"errors"
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/internal/services/views"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type PageCountController struct {
-	service views.Service
-	logger  *slog.Logger
-}
-
-func NewPageCountController(service views.Service, logger *slog.Logger) *PageCountController {
+func ViewPageCountHandler(service views.Service) fiber.Handler {
 	if service == nil {
-		panic("view page count service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &PageCountController{service: service, logger: logger}
-}
-
-func (c *PageCountController) PageCount(ctx *fiber.Ctx) error {
-	viewID, err := strconv.ParseInt(ctx.Query("view_id"), 10, 64)
-	if err != nil || viewID == 0 {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": errors.New("missing view_id").Error()})
+		panic("view service required")
 	}
 
-	sessionID, _ := strconv.ParseInt(ctx.Query("crawling_session_id"), 10, 64)
+	return func(c *fiber.Ctx) error {
+		viewID, err := strconv.ParseInt(c.Query("view_id"), 10, 64)
+		if err != nil || viewID == 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors.New("missing view_id").Error()})
+		}
 
-	resp, err := c.service.PageCount(ctx.Context(), viewsDto.ViewPageCountRequest{
-		ViewID:    viewID,
-		SessionID: sessionID,
-	})
-	if err != nil {
-		c.logger.Error("view page count failed", "error", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+		sessionID, _ := strconv.ParseInt(c.Query("crawling_session_id"), 10, 64)
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.PageCount(c.Context(), viewsDto.ViewPageCountRequest{
+			ViewID:    viewID,
+			SessionID: sessionID,
+		})
+		if err != nil {
+			logger.Error(c.UserContext(), "view page count failed", logger.Fields{logger.FieldError: err.Error()})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

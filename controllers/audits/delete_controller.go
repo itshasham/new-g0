@@ -1,45 +1,39 @@
 package audits
 
 import (
-	"log/slog"
-	"net/http"
 	"strconv"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
-	"sitecrawler/newgo/internal/services/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 
 	"github.com/gofiber/fiber/v2"
+
+	"sitecrawler/newgo/internal/services/audits"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type DeleteController struct {
-	service audits.Service
-	logger  *slog.Logger
-}
-
-func NewDeleteController(service audits.Service, logger *slog.Logger) *DeleteController {
+func DeleteAuditCheckHandler(service audits.Service) fiber.Handler {
 	if service == nil {
-		panic("audit check delete service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &DeleteController{service: service, logger: logger}
-}
-
-func (c *DeleteController) Delete(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		panic("audit check service required")
 	}
 
-	resp, err := c.service.Delete(ctx.Context(), auditsDto.DeleteAuditCheckRequest{ID: id})
-	if err != nil {
-		c.logger.Error("audit check delete failed", "error", err, "id", id)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.Delete(c.Context(), auditsDto.DeleteAuditCheckRequest{ID: id})
+		if err != nil {
+			logger.Error(c.UserContext(), "audit check delete failed", logger.Fields{
+				logger.FieldError: err.Error(),
+				"id":              id,
+			})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

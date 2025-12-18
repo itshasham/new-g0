@@ -1,19 +1,17 @@
 package tests
 
 import (
-viewsDto "sitecrawler/newgo/dto/views"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers/health"
-	"sitecrawler/newgo/controllers/views"
 	"sitecrawler/newgo/internal/repository"
 	viewsvc "sitecrawler/newgo/internal/services/views"
 	"sitecrawler/newgo/models"
@@ -528,20 +526,13 @@ func setupViewApp(factory func() repository.ViewRepository, seed func(*repositor
 
 	app := fiber.New()
 
-	healthController := health.NewController(nil)
-
 	// Use unified views service
-	viewService := viewsvc.NewService(viewRepo, pageRepo)
+	viewService := viewsvc.NewService(
+		viewsvc.WithViewRepository(viewRepo),
+		viewsvc.WithPageRepository(pageRepo),
+	)
 
-	routes.Register(app, routes.Dependencies{
-		Health:        healthController,
-		ViewList:      views.NewListController(viewService, nil),
-		ViewGet:       views.NewGetController(viewService, nil),
-		ViewCreate:    views.NewCreateController(viewService, nil),
-		ViewUpdate:    views.NewUpdateController(viewService, nil),
-		ViewDelete:    views.NewDeleteController(viewService, nil),
-		ViewPageCount: views.NewPageCountController(viewService, nil),
-	})
+	routes.RegisterRoutes(context.Background(), app, nil, nil, nil, viewService, nil)
 
 	return app
 }

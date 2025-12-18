@@ -3,13 +3,13 @@ package views
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) PageCount(ctx context.Context, req viewsDto.ViewPageCountRequest) (*dto.Response[viewsDto.ViewPageCountResponse], error) {
+func (s *Client) PageCount(ctx context.Context, req viewsDto.ViewPageCountRequest) (*dto.Response[viewsDto.ViewPageCountResponse], error) {
 	v, err := s.viewRepo.Get(ctx, req.ViewID)
 	if err != nil {
 		return dto.NewResponse[viewsDto.ViewPageCountResponse](false, err.Error(), http.StatusNotFound, nil), nil

@@ -1,19 +1,17 @@
 package tests
 
 import (
-sessionsDto "sitecrawler/newgo/dto/sessions"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers/health"
-	"sitecrawler/newgo/controllers/sessions"
 	"sitecrawler/newgo/internal/repository"
 	sessionsvc "sitecrawler/newgo/internal/services/sessions"
 	"sitecrawler/newgo/models"
@@ -399,23 +397,13 @@ func setupCrawlingSessionApp(
 
 	app := fiber.New()
 
-	// Health
-	healthController := health.NewController(nil)
-
 	// Crawling session service using unified service
-	sessionService := sessionsvc.NewService(sessionRepo, pageRepo, checkRepo)
-	crawlingCreateController := sessions.NewCreateController(sessionService, nil)
-	crawlingGetController := sessions.NewGetController(sessionService, nil)
-	pagesController := sessions.NewPagesController(sessionService, nil)
-	checksController := sessions.NewChecksController(sessionService, nil)
-
-	routes.Register(app, routes.Dependencies{
-		Health:                healthController,
-		CrawlingSessionCreate: crawlingCreateController,
-		CrawlingSessionGet:    crawlingGetController,
-		CrawlingSessionPages:  pagesController,
-		CrawlingSessionChecks: checksController,
-	})
+	sessionService := sessionsvc.NewService(
+		sessionsvc.WithSessionRepository(sessionRepo),
+		sessionsvc.WithPageRepository(pageRepo),
+		sessionsvc.WithCheckRepository(checkRepo),
+	)
+	routes.RegisterRoutes(context.Background(), app, nil, nil, sessionService, nil, nil)
 
 	return app
 }

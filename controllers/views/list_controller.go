@@ -1,42 +1,32 @@
 package views
 
 import (
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/internal/services/views"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type ListController struct {
-	service views.Service
-	logger  *slog.Logger
-}
-
-func NewListController(service views.Service, logger *slog.Logger) *ListController {
+func ListViewsHandler(service views.Service) fiber.Handler {
 	if service == nil {
-		panic("view list service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &ListController{service: service, logger: logger}
-}
-
-func (c *ListController) List(ctx *fiber.Ctx) error {
-	skuID, _ := strconv.ParseInt(ctx.Query("search_keyword_url_id"), 10, 64)
-
-	resp, err := c.service.List(ctx.Context(), viewsDto.ListViewsRequest{SearchKeywordURLID: skuID})
-	if err != nil {
-		c.logger.Error("view list failed", "error", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		panic("view service required")
 	}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+	return func(c *fiber.Ctx) error {
+		skuID, _ := strconv.ParseInt(c.Query("search_keyword_url_id"), 10, 64)
+
+		resp, err := service.List(c.Context(), viewsDto.ListViewsRequest{SearchKeywordURLID: skuID})
+		if err != nil {
+			logger.Error(c.UserContext(), "view list failed", logger.Fields{logger.FieldError: err.Error()})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

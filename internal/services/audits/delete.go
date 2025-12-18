@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) Delete(ctx context.Context, req auditsDto.DeleteAuditCheckRequest) (*dto.Response[auditsDto.DeleteAuditCheckResponse], error) {
+func (s *Client) Delete(ctx context.Context, req auditsDto.DeleteAuditCheckRequest) (*dto.Response[auditsDto.DeleteAuditCheckResponse], error) {
 	if err := s.repo.Delete(ctx, req.ID); err != nil {
 		if errors.Is(err, repository.ErrAuditCheckNotFound) {
 			return dto.NewResponse[auditsDto.DeleteAuditCheckResponse](false, err.Error(), http.StatusNotFound, nil), nil

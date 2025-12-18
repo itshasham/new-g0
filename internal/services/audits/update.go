@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) Update(ctx context.Context, req auditsDto.UpdateAuditCheckRequest) (*dto.Response[auditsDto.AuditCheckResponse], error) {
+func (s *Client) Update(ctx context.Context, req auditsDto.UpdateAuditCheckRequest) (*dto.Response[auditsDto.AuditCheckResponse], error) {
 	existing, err := s.repo.Get(ctx, req.ID)
 	if err != nil {
 		if errors.Is(err, repository.ErrAuditCheckNotFound) {

@@ -2,33 +2,14 @@ package sessions
 
 import (
 	"encoding/json"
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	sessionsDto "sitecrawler/newgo/dto/sessions"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/internal/services/sessions"
+	"sitecrawler/newgo/utils/logger"
 )
-
-type ChecksController struct {
-	service sessions.Service
-	logger  *slog.Logger
-}
-
-func NewChecksController(service sessions.Service, logger *slog.Logger) *ChecksController {
-	if service == nil {
-		panic("crawling session check service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &ChecksController{
-		service: service,
-		logger:  logger,
-	}
-}
 
 // @Summary List checks with pages
 // @Description Lists audit checks with their associated pages for a session
@@ -42,45 +23,54 @@ func NewChecksController(service sessions.Service, logger *slog.Logger) *ChecksC
 // @Failure 400 {object} map[string]string
 // @Failure 422 {object} map[string]string
 // @Router /api/crawling_sessions/{id}/checks_with_pages [get]
-func (c *ChecksController) List(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+func ListCrawlingSessionChecksHandler(service sessions.Service) fiber.Handler {
+	if service == nil {
+		panic("crawling session service required")
 	}
 
-	var filters []map[string]any
-	if rawFilters := ctx.Query("filters"); rawFilters != "" {
-		if err := json.Unmarshal([]byte(rawFilters), &filters); err != nil {
-			return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid filters"})
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 		}
-	}
 
-	var comparisonID *int64
-	if rawComparison := ctx.Query("comparison_crawling_session_id"); rawComparison != "" {
-		if comp, err := strconv.ParseInt(rawComparison, 10, 64); err == nil {
-			comparisonID = &comp
-		} else {
-			return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid comparison_crawling_session_id"})
+		var filters []map[string]any
+		if rawFilters := c.Query("filters"); rawFilters != "" {
+			if err := json.Unmarshal([]byte(rawFilters), &filters); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid filters"})
+			}
 		}
-	}
 
-	pageLimit, _ := strconv.Atoi(ctx.Query("page_limit_per_check"))
+		var comparisonID *int64
+		if rawComparison := c.Query("comparison_crawling_session_id"); rawComparison != "" {
+			if comp, err := strconv.ParseInt(rawComparison, 10, 64); err == nil {
+				comparisonID = &comp
+			} else {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid comparison_crawling_session_id"})
+			}
+		}
 
-	req := sessionsDto.ListCrawlingSessionChecksRequest{
-		SessionID:           id,
-		ComparisonSessionID: comparisonID,
-		ViewFilters:         filters,
-		PageLimitPerCheck:   pageLimit,
-	}
+		pageLimit, _ := strconv.Atoi(c.Query("page_limit_per_check"))
 
-	resp, err := c.service.ListChecks(ctx.Context(), req)
-	if err != nil {
-		c.logger.Error("checks with pages failed", "error", err, "id", id)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+		req := sessionsDto.ListCrawlingSessionChecksRequest{
+			SessionID:           id,
+			ComparisonSessionID: comparisonID,
+			ViewFilters:         filters,
+			PageLimitPerCheck:   pageLimit,
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.ListChecks(c.Context(), req)
+		if err != nil {
+			logger.Error(c.UserContext(), "checks with pages failed", logger.Fields{
+				logger.FieldError: err.Error(),
+				"id":              id,
+			})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

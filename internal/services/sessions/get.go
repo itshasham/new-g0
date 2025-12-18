@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	sessionsDto "sitecrawler/newgo/dto/sessions"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) Get(ctx context.Context, req sessionsDto.GetCrawlingSessionRequest) (*dto.Response[sessionsDto.CrawlingSessionResponse], error) {
+func (s *Client) Get(ctx context.Context, req sessionsDto.GetCrawlingSessionRequest) (*dto.Response[sessionsDto.CrawlingSessionResponse], error) {
 	session, err := s.sessionRepo.GetByID(ctx, req.ID)
 	if err != nil {
 		if errors.Is(err, repository.ErrCrawlingSessionNotFound) {

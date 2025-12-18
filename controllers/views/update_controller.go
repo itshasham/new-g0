@@ -1,51 +1,41 @@
 package views
 
 import (
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/internal/services/views"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type UpdateController struct {
-	service views.Service
-	logger  *slog.Logger
-}
-
-func NewUpdateController(service views.Service, logger *slog.Logger) *UpdateController {
+func UpdateViewHandler(service views.Service) fiber.Handler {
 	if service == nil {
-		panic("view update service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &UpdateController{service: service, logger: logger}
-}
-
-func (c *UpdateController) Update(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+		panic("view service required")
 	}
 
-	var request viewsDto.UpdateViewRequest
-	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
-	}
-	request.ID = id
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+		}
 
-	resp, err := c.service.Update(ctx.Context(), request)
-	if err != nil {
-		c.logger.Error("view update failed", "error", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+		var request viewsDto.UpdateViewRequest
+		if err := c.BodyParser(&request); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
+		}
+		request.ID = id
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.Update(c.Context(), request)
+		if err != nil {
+			logger.Error(c.UserContext(), "view update failed", logger.Fields{logger.FieldError: err.Error()})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

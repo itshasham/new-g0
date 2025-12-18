@@ -3,13 +3,13 @@ package sessions
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	sessionsDto "sitecrawler/newgo/dto/sessions"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) ListPages(ctx context.Context, req sessionsDto.ListCrawlingSessionPagesRequest) (*dto.Response[sessionsDto.CrawlingSessionPagesResponse], error) {
+func (s *Client) ListPages(ctx context.Context, req sessionsDto.ListCrawlingSessionPagesRequest) (*dto.Response[sessionsDto.CrawlingSessionPagesResponse], error) {
 	params := repository.PageListParams{
 		SessionID: req.SessionID,
 		Filters:   req.Filters,

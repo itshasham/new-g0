@@ -1,45 +1,35 @@
 package views
 
 import (
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/internal/services/views"
+	"sitecrawler/newgo/utils/logger"
 )
 
-type GetController struct {
-	service views.Service
-	logger  *slog.Logger
-}
-
-func NewGetController(service views.Service, logger *slog.Logger) *GetController {
+func GetViewHandler(service views.Service) fiber.Handler {
 	if service == nil {
-		panic("view get service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &GetController{service: service, logger: logger}
-}
-
-func (c *GetController) Get(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+		panic("view service required")
 	}
 
-	resp, err := c.service.Get(ctx.Context(), viewsDto.GetViewRequest{ID: id})
-	if err != nil {
-		c.logger.Error("view get failed", "error", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.Get(c.Context(), viewsDto.GetViewRequest{ID: id})
+		if err != nil {
+			logger.Error(c.UserContext(), "view get failed", logger.Fields{logger.FieldError: err.Error()})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

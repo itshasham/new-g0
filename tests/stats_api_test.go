@@ -1,18 +1,16 @@
 package tests
 
 import (
-statsDto "sitecrawler/newgo/dto/stats"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	statsDto "sitecrawler/newgo/controllers/dto/stats"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers/health"
-	"sitecrawler/newgo/controllers/stats"
 	"sitecrawler/newgo/internal/repository"
 	statssvc "sitecrawler/newgo/internal/services/stats"
 	"sitecrawler/newgo/routes"
@@ -102,20 +100,16 @@ func TestStatsAPI(t *testing.T) {
 func setupStatsApp(repo repository.StatsRepository) *fiber.App {
 	app := fiber.New()
 
-	healthController := health.NewController(nil)
-
 	if repo == nil {
 		repo = fakeStatsRepo{}
 	}
 
 	// Use unified stats service
-	statsService := statssvc.NewService(repo, repository.NewNoopPageDetailsRepository())
-	statsController := stats.NewStatsController(statsService, nil)
-
-	routes.Register(app, routes.Dependencies{
-		Health: healthController,
-		Stats:  statsController,
-	})
+	statsService := statssvc.NewService(
+		statssvc.WithStatsRepository(repo),
+		statssvc.WithPageDetailsRepository(repository.NewNoopPageDetailsRepository()),
+	)
+	routes.RegisterRoutes(context.Background(), app, nil, nil, nil, nil, statsService)
 
 	return app
 }

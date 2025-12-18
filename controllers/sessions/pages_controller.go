@@ -2,33 +2,14 @@ package sessions
 
 import (
 	"encoding/json"
-	"log/slog"
-	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	sessionsDto "sitecrawler/newgo/dto/sessions"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/internal/services/sessions"
+	"sitecrawler/newgo/utils/logger"
 )
-
-type PagesController struct {
-	service sessions.Service
-	logger  *slog.Logger
-}
-
-func NewPagesController(service sessions.Service, logger *slog.Logger) *PagesController {
-	if service == nil {
-		panic("crawling session page service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &PagesController{
-		service: service,
-		logger:  logger,
-	}
-}
 
 // @Summary List pages for crawling session
 // @Description Lists pages for a crawling session with optional filters
@@ -44,39 +25,48 @@ func NewPagesController(service sessions.Service, logger *slog.Logger) *PagesCon
 // @Failure 400 {object} map[string]string
 // @Failure 422 {object} map[string]string
 // @Router /api/crawling_sessions/{id}/pages [get]
-func (c *PagesController) List(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseInt(ctx.Params("id"), 10, 64)
-	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+func ListCrawlingSessionPagesHandler(service sessions.Service) fiber.Handler {
+	if service == nil {
+		panic("crawling session service required")
 	}
 
-	var filters []map[string]any
-	if rawFilters := ctx.Query("filters"); rawFilters != "" {
-		if err := json.Unmarshal([]byte(rawFilters), &filters); err != nil {
-			return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid filters"})
+	return func(c *fiber.Ctx) error {
+		id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 		}
-	}
 
-	page, _ := strconv.Atoi(ctx.Query("page"))
-	pageLimit, _ := strconv.Atoi(ctx.Query("page_limit"))
+		var filters []map[string]any
+		if rawFilters := c.Query("filters"); rawFilters != "" {
+			if err := json.Unmarshal([]byte(rawFilters), &filters); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid filters"})
+			}
+		}
 
-	req := sessionsDto.ListCrawlingSessionPagesRequest{
-		SessionID: id,
-		Filters:   filters,
-		Sort:      ctx.Query("sort"),
-		Direction: ctx.Query("direction"),
-		Page:      page,
-		PageLimit: pageLimit,
-	}
+		page, _ := strconv.Atoi(c.Query("page"))
+		pageLimit, _ := strconv.Atoi(c.Query("page_limit"))
 
-	resp, err := c.service.ListPages(ctx.Context(), req)
-	if err != nil {
-		c.logger.Error("crawling session pages list failed", "error", err, "id", id)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+		req := sessionsDto.ListCrawlingSessionPagesRequest{
+			SessionID: id,
+			Filters:   filters,
+			Sort:      c.Query("sort"),
+			Direction: c.Query("direction"),
+			Page:      page,
+			PageLimit: pageLimit,
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.ListPages(c.Context(), req)
+		if err != nil {
+			logger.Error(c.UserContext(), "crawling session pages list failed", logger.Fields{
+				logger.FieldError: err.Error(),
+				"id":              id,
+			})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }

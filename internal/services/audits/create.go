@@ -3,13 +3,13 @@ package audits
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"sitecrawler/newgo/models"
 )
 
-func (s *service) Create(ctx context.Context, req auditsDto.CreateAuditCheckRequest) (*dto.Response[auditsDto.AuditCheckResponse], error) {
+func (s *Client) Create(ctx context.Context, req auditsDto.CreateAuditCheckRequest) (*dto.Response[auditsDto.AuditCheckResponse], error) {
 	check := &models.AuditCheck{
 		SearchKeywordURLID: req.Data.SearchKeywordURLID,
 		Name:               req.Data.Name,

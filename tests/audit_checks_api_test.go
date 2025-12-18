@@ -1,19 +1,17 @@
 package tests
 
 import (
-auditsDto "sitecrawler/newgo/dto/audits"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers/audits"
-	"sitecrawler/newgo/controllers/health"
 	"sitecrawler/newgo/internal/repository"
 	auditsvc "sitecrawler/newgo/internal/services/audits"
 	"sitecrawler/newgo/models"
@@ -227,19 +225,10 @@ func setupAuditApp(factory func() repository.AuditCheckRepository, seed func(*re
 
 	app := fiber.New()
 
-	healthController := health.NewController(nil)
-
 	// Use unified service
-	auditService := auditsvc.NewService(repo)
+	auditService := auditsvc.NewService(auditsvc.WithAuditCheckRepository(repo))
 
-	routes.Register(app, routes.Dependencies{
-		Health:           healthController,
-		AuditCheckList:   audits.NewListController(auditService, nil),
-		AuditCheckGet:    audits.NewGetController(auditService, nil),
-		AuditCheckCreate: audits.NewCreateController(auditService, nil),
-		AuditCheckUpdate: audits.NewUpdateController(auditService, nil),
-		AuditCheckDelete: audits.NewDeleteController(auditService, nil),
-	})
+	routes.RegisterRoutes(context.Background(), app, nil, auditService, nil, nil, nil)
 
 	return app
 }

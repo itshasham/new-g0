@@ -2,33 +2,14 @@ package sessions
 
 import (
 	"errors"
-	"log/slog"
-	"net/http"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
-	sessionsDto "sitecrawler/newgo/dto/sessions"
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/internal/services/sessions"
+	"sitecrawler/newgo/utils/logger"
 )
-
-type CreateController struct {
-	service sessions.Service
-	logger  *slog.Logger
-}
-
-func NewCreateController(service sessions.Service, logger *slog.Logger) *CreateController {
-	if service == nil {
-		panic("crawling session create service required")
-	}
-	if logger == nil {
-		logger = slog.Default()
-	}
-	return &CreateController{
-		service: service,
-		logger:  logger,
-	}
-}
 
 // @Summary Create crawling session
 // @Description Creates a new crawling session for a SKU
@@ -40,26 +21,32 @@ func NewCreateController(service sessions.Service, logger *slog.Logger) *CreateC
 // @Failure 400 {object} map[string]string
 // @Failure 422 {object} map[string]string
 // @Router /api/crawling_sessions [post]
-func (c *CreateController) Create(ctx *fiber.Ctx) error {
-	var request sessionsDto.CreateCrawlingSessionRequest
-	if err := ctx.BodyParser(&request); err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
+func CreateCrawlingSessionHandler(service sessions.Service) fiber.Handler {
+	if service == nil {
+		panic("crawling session service required")
 	}
 
-	if err := validateCreateSessionRequest(request); err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-	}
+	return func(c *fiber.Ctx) error {
+		var request sessionsDto.CreateCrawlingSessionRequest
+		if err := c.BodyParser(&request); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
+		}
 
-	resp, err := c.service.Create(ctx.Context(), request)
-	if err != nil {
-		c.logger.Error("crawling session create failed", "error", err)
-		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-	}
+		if err := validateCreateSessionRequest(request); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 
-	if resp.Body == nil {
-		return ctx.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		resp, err := service.Create(c.Context(), request)
+		if err != nil {
+			logger.Error(c.UserContext(), "crawling session create failed", logger.Fields{logger.FieldError: err.Error()})
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
+
+		if resp.Body == nil {
+			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+		}
+		return c.Status(resp.StatusCode).JSON(resp.Body)
 	}
-	return ctx.Status(resp.StatusCode).JSON(resp.Body)
 }
 
 func validateCreateSessionRequest(req sessionsDto.CreateCrawlingSessionRequest) error {

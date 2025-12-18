@@ -3,14 +3,13 @@ package views
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	viewsDto "sitecrawler/newgo/dto/views"
-	"sitecrawler/newgo/internal/repository"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/models"
 )
 
-func (s *service) List(ctx context.Context, req viewsDto.ListViewsRequest) (*dto.Response[viewsDto.ViewsResponse], error) {
+func (s *Client) List(ctx context.Context, req viewsDto.ListViewsRequest) (*dto.Response[viewsDto.ViewsResponse], error) {
 	skuID := req.SearchKeywordURLID
 	if skuID == 0 {
 		return dto.NewSuccessResponse(viewsDto.ViewsResponse{Data: []models.View{}}, http.StatusOK), nil

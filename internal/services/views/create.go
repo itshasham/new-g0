@@ -3,13 +3,13 @@ package views
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	viewsDto "sitecrawler/newgo/dto/views"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/models"
 )
 
-func (s *service) Create(ctx context.Context, req viewsDto.CreateViewRequest) (*dto.Response[viewsDto.ViewResponse], error) {
+func (s *Client) Create(ctx context.Context, req viewsDto.CreateViewRequest) (*dto.Response[viewsDto.ViewResponse], error) {
 	view := &models.View{
 		SearchKeywordURLID: req.Data.SearchKeywordURLID,
 		Name:               req.Data.Name,

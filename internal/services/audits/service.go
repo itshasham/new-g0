@@ -2,23 +2,11 @@ package audits
 
 import (
 	"context"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	auditsDto "sitecrawler/newgo/dto/audits"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 	"sitecrawler/newgo/internal/repository"
 )
-
-type service struct {
-	repo repository.AuditCheckRepository
-}
-
-// NewService creates a new audit check service.
-func NewService(repo repository.AuditCheckRepository) Service {
-	if repo == nil {
-		panic("audit check repository required")
-	}
-	return &service{repo: repo}
-}
 
 // Service defines all audit check operations.
 type Service interface {
@@ -27,4 +15,31 @@ type Service interface {
 	Get(ctx context.Context, req auditsDto.GetAuditCheckRequest) (*dto.Response[auditsDto.AuditCheckResponse], error)
 	Update(ctx context.Context, req auditsDto.UpdateAuditCheckRequest) (*dto.Response[auditsDto.AuditCheckResponse], error)
 	Delete(ctx context.Context, req auditsDto.DeleteAuditCheckRequest) (*dto.Response[auditsDto.DeleteAuditCheckResponse], error)
+}
+
+type Client struct {
+	repo repository.AuditCheckRepository
+}
+
+type Option func(s *Client)
+
+func NewService(opts ...Option) Service {
+	client := &Client{}
+	client.WithOptions(opts...)
+	if client.repo == nil {
+		panic("audit check repository required")
+	}
+	return client
+}
+
+func (c *Client) WithOptions(opts ...Option) {
+	for _, opt := range opts {
+		opt(c)
+	}
+}
+
+func WithAuditCheckRepository(repo repository.AuditCheckRepository) Option {
+	return func(c *Client) {
+		c.repo = repo
+	}
 }

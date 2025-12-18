@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -8,8 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"sitecrawler/newgo/controllers/health"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 	"sitecrawler/newgo/routes"
 )
 
@@ -40,12 +40,7 @@ func TestHealthEndpoint(t *testing.T) {
 func setupHealthTestApp() *fiber.App {
 	app := fiber.New()
 
-	// Use new simplified health package
-	controller := health.NewController(nil)
-
-	routes.Register(app, routes.Dependencies{
-		Health: controller,
-	})
+	routes.RegisterRoutes(context.Background(), app, nil, nil, nil, nil, nil)
 
 	return app
 }

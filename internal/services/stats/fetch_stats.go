@@ -3,13 +3,13 @@ package stats
 import (
 	"context"
 	"net/http"
-	"sitecrawler/newgo/dto"
+	"sitecrawler/newgo/controllers/dto"
 
-	statsDto "sitecrawler/newgo/dto/stats"
+	statsDto "sitecrawler/newgo/controllers/dto/stats"
 	"sitecrawler/newgo/internal/repository"
 )
 
-func (s *service) Fetch(ctx context.Context, req statsDto.StatsRequest) (*dto.Response[statsDto.StatsResponse], error) {
+func (s *Client) Fetch(ctx context.Context, req statsDto.StatsRequest) (*dto.Response[statsDto.StatsResponse], error) {
 	params := repository.StatsQueryParams{
 		SessionID:           req.CrawlingSessionID,
 		ComparisonSessionID: req.ComparisonCrawlingID,
