@@ -7,36 +7,45 @@ import (
 	"github.com/gofiber/fiber/v2"
 	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 
-	"sitecrawler/newgo/internal/services/audits"
 	"sitecrawler/newgo/utils/logger"
 )
 
-func CreateAuditCheckHandler(service audits.Service) fiber.Handler {
-	if service == nil {
-		panic("audit check service required")
+func (ctrl *Controller) Create(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	fields := logger.Fields{
+		logger.FieldMethod: "CreateAuditCheck",
+	}
+	logger.Info(ctx, "audit check create request received", fields)
+
+	var req auditsDto.CreateAuditCheckRequest
+	if err := c.BodyParser(&req); err != nil {
+		fields[logger.FieldError] = err.Error()
+		logger.Error(ctx, "failed to parse request body", fields)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
+	}
+	fields[logger.FieldRequest] = req
+	logger.Info(ctx, "request received", fields)
+
+	if err := validateCreateAuditCheckRequest(req); err != nil {
+		fields[logger.FieldError] = err.Error()
+		logger.Error(ctx, "validation failed", fields)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return func(c *fiber.Ctx) error {
-		var request auditsDto.CreateAuditCheckRequest
-		if err := c.BodyParser(&request); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid json payload"})
-		}
-
-		if err := validateCreateAuditCheckRequest(request); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-		}
-
-		resp, err := service.Create(c.Context(), request)
-		if err != nil {
-			logger.Error(c.UserContext(), "audit check create failed", logger.Fields{logger.FieldError: err.Error()})
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-		}
-
-		if resp.Body == nil {
-			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
-		}
-		return c.Status(resp.StatusCode).JSON(resp.Body)
+	resp, err := ctrl.service.Create(c.Context(), req)
+	if err != nil {
+		fields[logger.FieldError] = err.Error()
+		logger.Error(ctx, "audit check create failed", fields)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
+
+	fields[logger.FieldResponse] = resp
+	logger.Info(ctx, "audit check created successfully", fields)
+
+	if resp.Body == nil {
+		return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
+	}
+	return c.Status(resp.StatusCode).JSON(resp.Body)
 }
 
 func validateCreateAuditCheckRequest(req auditsDto.CreateAuditCheckRequest) error {

@@ -20,10 +20,11 @@ func RegisterViewRoutes(
 		return
 	}
 
-	router.Get("/", views.ListViewsHandler(viewService))
-	router.Post("/", views.CreateViewHandler(viewService))
-	router.Get("/:id", views.GetViewHandler(viewService))
-	router.Put("/:id", views.UpdateViewHandler(viewService))
-	router.Delete("/:id", views.DeleteViewHandler(viewService))
-	router.Get("/:id/page_count", views.ViewPageCountHandler(viewService))
+	ctrl := views.NewController(viewService)
+	router.Get("/", ctrl.List)
+	router.Post("/", ctrl.Create)
+	router.Get("/:id", ctrl.Get)
+	router.Put("/:id", ctrl.Update)
+	router.Delete("/:id", ctrl.Delete)
+	router.Get("/:id/page_count", ctrl.PageCount)
 }

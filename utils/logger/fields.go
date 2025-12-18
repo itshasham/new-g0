@@ -7,6 +7,9 @@ type Fields map[string]interface{}
 const (
 	FieldError         = "error"
 	FieldCorrelationID = "correlation_id"
+	FieldMethod        = "method"
+	FieldRequest       = "request"
+	FieldResponse      = "response"
 )
 
 type correlationIDKey struct{}

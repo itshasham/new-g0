@@ -4,30 +4,37 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	viewsDto "sitecrawler/newgo/controllers/dto/views"
-	"sitecrawler/newgo/internal/services/views"
 	"sitecrawler/newgo/utils/logger"
 )
 
-func CreateViewHandler(service views.Service) fiber.Handler {
-	if service == nil {
-		panic("view service required")
+func (ctrl *Controller) Create(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	fields := logger.Fields{
+		logger.FieldMethod: "CreateView",
+	}
+	logger.Info(ctx, "view create request received", fields)
+
+	var req viewsDto.CreateViewRequest
+	if err := c.BodyParser(&req); err != nil {
+		fields[logger.FieldError] = err.Error()
+		logger.Error(ctx, "failed to parse request body", fields)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	fields[logger.FieldRequest] = req
+	logger.Info(ctx, "request received", fields)
+
+	resp, err := ctrl.service.Create(c.Context(), req)
+	if err != nil {
+		fields[logger.FieldError] = err.Error()
+		logger.Error(ctx, "view create failed", fields)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
 
-	return func(c *fiber.Ctx) error {
-		var request viewsDto.CreateViewRequest
-		if err := c.BodyParser(&request); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-		}
+	fields[logger.FieldResponse] = resp
+	logger.Info(ctx, "view created successfully", fields)
 
-		resp, err := service.Create(c.Context(), request)
-		if err != nil {
-			logger.Error(c.UserContext(), "view create failed", logger.Fields{logger.FieldError: err.Error()})
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
-		}
-
-		if resp.Body == nil {
-			return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
-		}
-		return c.Status(resp.StatusCode).JSON(resp.Body)
+	if resp.Body == nil {
+		return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
 	}
+	return c.Status(resp.StatusCode).JSON(resp.Body)
 }

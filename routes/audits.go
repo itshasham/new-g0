@@ -20,9 +20,10 @@ func RegisterAuditCheckRoutes(
 		return
 	}
 
-	router.Get("/", audits.ListAuditChecksHandler(auditService))
-	router.Post("/", audits.CreateAuditCheckHandler(auditService))
-	router.Get("/:id", audits.GetAuditCheckHandler(auditService))
-	router.Put("/:id", audits.UpdateAuditCheckHandler(auditService))
-	router.Delete("/:id", audits.DeleteAuditCheckHandler(auditService))
+	ctrl := audits.NewController(auditService)
+	router.Get("/", ctrl.List)
+	router.Post("/", ctrl.Create)
+	router.Get("/:id", ctrl.Get)
+	router.Put("/:id", ctrl.Update)
+	router.Delete("/:id", ctrl.Delete)
 }

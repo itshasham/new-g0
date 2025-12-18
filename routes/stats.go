@@ -15,7 +15,8 @@ func RegisterStatsRoutes(ctx context.Context, router fiber.Router, statsService 
 	if statsService == nil {
 		return
 	}
-	router.Get("/", stats.FetchStatsHandler(statsService))
+	ctrl := stats.NewController(statsService)
+	router.Get("/", ctrl.Fetch)
 }
 
 func RegisterPageDetailsRoutes(ctx context.Context, router fiber.Router, statsService statssvc.Service) {
@@ -24,5 +25,6 @@ func RegisterPageDetailsRoutes(ctx context.Context, router fiber.Router, statsSe
 	if statsService == nil {
 		return
 	}
-	router.Get("/:id/page_details", stats.PageDetailsHandler(statsService))
+	ctrl := stats.NewController(statsService)
+	router.Get("/:id/page_details", ctrl.Details)
 }

@@ -20,8 +20,9 @@ func RegisterCrawlingSessionRoutes(
 		return
 	}
 
-	router.Post("/", sessions.CreateCrawlingSessionHandler(sessionService))
-	router.Get("/:id", sessions.GetCrawlingSessionHandler(sessionService))
-	router.Get("/:id/pages", sessions.ListCrawlingSessionPagesHandler(sessionService))
-	router.Get("/:id/checks_with_pages", sessions.ListCrawlingSessionChecksHandler(sessionService))
+	ctrl := sessions.NewController(sessionService)
+	router.Post("/", ctrl.Create)
+	router.Get("/:id", ctrl.Get)
+	router.Get("/:id/pages", ctrl.ListPages)
+	router.Get("/:id/checks_with_pages", ctrl.ListChecks)
 }
