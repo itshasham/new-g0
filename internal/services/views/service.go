@@ -1,8 +1,8 @@
 package views
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
+	"sitecrawler/newgo/dto"
 
 	viewsDto "sitecrawler/newgo/dto/views"
 )

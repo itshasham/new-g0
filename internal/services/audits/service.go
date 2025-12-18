@@ -1,8 +1,8 @@
 package audits
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
+	"sitecrawler/newgo/dto"
 
 	auditsDto "sitecrawler/newgo/dto/audits"
 )

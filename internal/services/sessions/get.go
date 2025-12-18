@@ -1,10 +1,10 @@
 package sessions
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"errors"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	sessionsDto "sitecrawler/newgo/dto/sessions"
 	"sitecrawler/newgo/internal/repository"

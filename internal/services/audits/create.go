@@ -1,9 +1,9 @@
 package audits
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	auditsDto "sitecrawler/newgo/dto/audits"
 	"sitecrawler/newgo/models"

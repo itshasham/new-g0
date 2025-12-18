@@ -1,9 +1,9 @@
 package sessions
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	sessionsDto "sitecrawler/newgo/dto/sessions"
 	"sitecrawler/newgo/internal/repository"
@@ -39,7 +39,6 @@ func NewService(
 }
 
 func (s *service) Create(ctx context.Context, req sessionsDto.CreateCrawlingSessionRequest) (*dto.Response[sessionsDto.CrawlingSessionResponse], error) {
-	// Check if a session is already in progress for this SKU
 	if err := s.sessionRepo.PreventInProgress(ctx, req.Data.SearchKeywordURLID); err != nil {
 		return dto.NewResponse[sessionsDto.CrawlingSessionResponse](false, err.Error(), http.StatusUnprocessableEntity, nil), nil
 	}

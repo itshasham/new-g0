@@ -1,10 +1,10 @@
 package views
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"errors"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	viewsDto "sitecrawler/newgo/dto/views"
 	"sitecrawler/newgo/internal/repository"

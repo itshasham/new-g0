@@ -1,13 +1,13 @@
 package stats
 
 import (
-statsDto "sitecrawler/newgo/dto/stats"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
+	statsDto "sitecrawler/newgo/dto/stats"
 	"sitecrawler/newgo/internal/services/stats"
 )
 

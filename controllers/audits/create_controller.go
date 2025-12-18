@@ -1,15 +1,15 @@
 package audits
 
 import (
-auditsDto "sitecrawler/newgo/dto/audits"
 	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
-
+	auditsDto "sitecrawler/newgo/dto/audits"
 	"sitecrawler/newgo/internal/services/audits"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type CreateController struct {

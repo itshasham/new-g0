@@ -1,7 +1,6 @@
 package sessions
 
 import (
-sessionsDto "sitecrawler/newgo/dto/sessions"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -9,6 +8,7 @@ sessionsDto "sitecrawler/newgo/dto/sessions"
 
 	"github.com/gofiber/fiber/v2"
 
+	sessionsDto "sitecrawler/newgo/dto/sessions"
 	"sitecrawler/newgo/internal/services/sessions"
 )
 

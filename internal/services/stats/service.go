@@ -1,8 +1,8 @@
 package stats
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
+	"sitecrawler/newgo/dto"
 
 	statsDto "sitecrawler/newgo/dto/stats"
 )

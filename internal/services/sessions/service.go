@@ -1,8 +1,8 @@
 package sessions
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
+	"sitecrawler/newgo/dto"
 
 	sessionsDto "sitecrawler/newgo/dto/sessions"
 )

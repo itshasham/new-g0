@@ -1,10 +1,10 @@
 package audits
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"errors"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	auditsDto "sitecrawler/newgo/dto/audits"
 	"sitecrawler/newgo/internal/repository"

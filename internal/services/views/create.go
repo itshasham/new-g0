@@ -1,9 +1,9 @@
 package views
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	viewsDto "sitecrawler/newgo/dto/views"
 	"sitecrawler/newgo/models"

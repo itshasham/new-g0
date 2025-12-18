@@ -1,13 +1,13 @@
 package sessions
 
 import (
-sessionsDto "sitecrawler/newgo/dto/sessions"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
+	sessionsDto "sitecrawler/newgo/dto/sessions"
 	"sitecrawler/newgo/internal/services/sessions"
 )
 

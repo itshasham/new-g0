@@ -1,7 +1,6 @@
 package views
 
 import (
-viewsDto "sitecrawler/newgo/dto/views"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -9,6 +8,7 @@ viewsDto "sitecrawler/newgo/dto/views"
 
 	"github.com/gofiber/fiber/v2"
 
+	viewsDto "sitecrawler/newgo/dto/views"
 	"sitecrawler/newgo/internal/services/views"
 )
 

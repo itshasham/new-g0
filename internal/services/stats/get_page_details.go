@@ -1,10 +1,10 @@
 package stats
 
 import (
-"sitecrawler/newgo/dto"
 	"context"
 	"errors"
 	"net/http"
+	"sitecrawler/newgo/dto"
 
 	statsDto "sitecrawler/newgo/dto/stats"
 	"sitecrawler/newgo/internal/repository"
