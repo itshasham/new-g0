@@ -10,6 +10,7 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// FetchStats godoc
 // @Summary Fetch stats
 // @Description Retrieves stats for a crawling session with optional filters
 // @Tags Stats

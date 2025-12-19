@@ -1,29 +1,42 @@
-package audits
+package views
 
 import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
-	auditsDto "sitecrawler/newgo/controllers/dto/audits"
+	viewsDto "sitecrawler/newgo/controllers/dto/views"
 	"sitecrawler/newgo/utils/logger"
 )
 
+// UpdateView godoc
+// @Summary Update view
+// @Description Updates a view by ID
+// @Tags Views
+// @Accept json
+// @Produce json
+// @Param id path int true "View ID"
+// @Param request body viewsDto.UpdateViewRequest true "View update payload"
+// @Success 200 {object} viewsDto.ViewResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /api/views/{id} [put]
 func (ctrl *Controller) Update(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{
-		logger.FieldMethod: "UpdateAuditCheck",
+		logger.FieldMethod: "UpdateView",
 	}
-	logger.Info(ctx, "audit check update request received", fields)
+	logger.Info(ctx, "view update request received", fields)
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
 		fields[logger.FieldError] = err.Error()
 		logger.Error(ctx, "invalid id", fields)
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 	}
 
-	var req auditsDto.UpdateAuditCheckRequest
+	var req viewsDto.UpdateViewRequest
 	if err := c.BodyParser(&req); err != nil {
 		fields[logger.FieldError] = err.Error()
 		logger.Error(ctx, "failed to parse request body", fields)
@@ -36,12 +49,12 @@ func (ctrl *Controller) Update(c *fiber.Ctx) error {
 	resp, err := ctrl.service.Update(c.Context(), req)
 	if err != nil {
 		fields[logger.FieldError] = err.Error()
-		logger.Error(ctx, "audit check update failed", fields)
+		logger.Error(ctx, "view update failed", fields)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
 
 	fields[logger.FieldResponse] = resp
-	logger.Info(ctx, "audit check updated successfully", fields)
+	logger.Info(ctx, "view updated successfully", fields)
 
 	if resp.Body == nil {
 		return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})

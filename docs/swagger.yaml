@@ -1,0 +1,1010 @@
+basePath: /
+definitions:
+  audits.AuditCheckResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.AuditCheck'
+    type: object
+  audits.AuditChecksResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.AuditCheck'
+        type: array
+    type: object
+  audits.CreateAuditCheckData:
+    properties:
+      category:
+        type: string
+      filter_config:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      search_keyword_url_id:
+        type: integer
+    type: object
+  audits.CreateAuditCheckRequest:
+    properties:
+      data:
+        $ref: '#/definitions/audits.CreateAuditCheckData'
+    type: object
+  audits.DeleteAuditCheckData:
+    properties:
+      id:
+        type: integer
+    type: object
+  audits.DeleteAuditCheckResponse:
+    properties:
+      data:
+        $ref: '#/definitions/audits.DeleteAuditCheckData'
+    type: object
+  audits.UpdateAuditCheckData:
+    properties:
+      category:
+        type: string
+      filter_config:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+    type: object
+  audits.UpdateAuditCheckRequest:
+    properties:
+      data:
+        $ref: '#/definitions/audits.UpdateAuditCheckData'
+      id:
+        type: integer
+    type: object
+  dto.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  models.AuditCheck:
+    properties:
+      category:
+        type: string
+      createdAt:
+        type: string
+      filterConfig:
+        additionalProperties: {}
+        type: object
+      id:
+        type: integer
+      name:
+        type: string
+      searchKeywordURLID:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  models.CheckWithPages:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      pages:
+        items:
+          $ref: '#/definitions/models.Page'
+        type: array
+    type: object
+  models.CrawlingSession:
+    properties:
+      aliases:
+        items:
+          type: string
+        type: array
+      createdAt:
+        type: string
+      dnsservers:
+        items:
+          type: string
+        type: array
+      endReason:
+        type: string
+      endedAt:
+        type: string
+      error:
+        type: string
+      externalResourcesCount:
+        type: integer
+      externalURLsCount:
+        type: integer
+      id:
+        type: integer
+      ignoredURLsCount:
+        type: integer
+      internalResourcesCount:
+        type: integer
+      internalURLsCount:
+        type: integer
+      ips:
+        items:
+          type: string
+        type: array
+      location:
+        type: string
+      options:
+        additionalProperties: {}
+        type: object
+      pagesCount:
+        type: integer
+      queue:
+        type: integer
+      robots:
+        type: boolean
+      searchKeywordURLID:
+        type: integer
+      sitemap:
+        type: boolean
+      sslvalid:
+        type: boolean
+      sslvalidUntil:
+        type: string
+      startedAt:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      url:
+        type: string
+      version:
+        type: integer
+    type: object
+  models.Page:
+    properties:
+      crawling_session_id:
+        type: integer
+      id:
+        type: integer
+      response_code:
+        type: integer
+      url:
+        type: string
+    type: object
+  models.PageImage:
+    properties:
+      id:
+        type: integer
+      page_id:
+        type: integer
+      url:
+        type: string
+    type: object
+  models.View:
+    properties:
+      createdAt:
+        type: string
+      filterConfig:
+        additionalProperties: {}
+        type: object
+      id:
+        type: integer
+      name:
+        type: string
+      searchKeywordURLID:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  sessions.CrawlingSessionChecksData:
+    properties:
+      checks:
+        items:
+          $ref: '#/definitions/models.CheckWithPages'
+        type: array
+    type: object
+  sessions.CrawlingSessionChecksResponse:
+    properties:
+      data:
+        $ref: '#/definitions/sessions.CrawlingSessionChecksData'
+    type: object
+  sessions.CrawlingSessionPagesData:
+    properties:
+      pages:
+        items:
+          $ref: '#/definitions/models.Page'
+        type: array
+      pages_total:
+        type: integer
+    type: object
+  sessions.CrawlingSessionPagesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/sessions.CrawlingSessionPagesData'
+    type: object
+  sessions.CrawlingSessionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.CrawlingSession'
+    type: object
+  sessions.CreateCrawlingSessionData:
+    properties:
+      options:
+        additionalProperties: {}
+        type: object
+      queue:
+        type: integer
+      search_keyword_url_id:
+        type: integer
+      url:
+        type: string
+    type: object
+  sessions.CreateCrawlingSessionRequest:
+    properties:
+      data:
+        $ref: '#/definitions/sessions.CreateCrawlingSessionData'
+    type: object
+  stats.PageDetailsData:
+    properties:
+      broken_pages:
+        items:
+          $ref: '#/definitions/models.Page'
+        type: array
+      page_images:
+        items:
+          $ref: '#/definitions/models.PageImage'
+        type: array
+      pages_linked_to_broken_page:
+        items:
+          $ref: '#/definitions/models.Page'
+        type: array
+    type: object
+  stats.PageDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/stats.PageDetailsData'
+    type: object
+  stats.StatsResponse:
+    properties:
+      data:
+        additionalProperties: {}
+        type: object
+    type: object
+  views.CreateViewData:
+    properties:
+      filter_config:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      search_keyword_url_id:
+        type: integer
+    type: object
+  views.CreateViewRequest:
+    properties:
+      data:
+        $ref: '#/definitions/views.CreateViewData'
+    type: object
+  views.DeleteViewData:
+    properties:
+      id:
+        type: integer
+    type: object
+  views.DeleteViewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/views.DeleteViewData'
+    type: object
+  views.UpdateViewData:
+    properties:
+      filter_config:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+    type: object
+  views.UpdateViewRequest:
+    properties:
+      data:
+        $ref: '#/definitions/views.UpdateViewData'
+      id:
+        type: integer
+    type: object
+  views.ViewPageCountData:
+    properties:
+      page_count:
+        type: integer
+    type: object
+  views.ViewPageCountResponse:
+    properties:
+      data:
+        $ref: '#/definitions/views.ViewPageCountData'
+    type: object
+  views.ViewResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.View'
+    type: object
+  views.ViewsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.View'
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Access token for authentication
+  termsOfService: http://swagger.io/terms/
+  title: SiteCrawler API
+  version: "1.0"
+paths:
+  /api/audit_checks:
+    get:
+      description: Lists audit checks for a given `search_keyword_url_id`
+      parameters:
+      - description: Search keyword URL ID
+        in: query
+        name: search_keyword_url_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/audits.AuditChecksResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List audit checks
+      tags:
+      - AuditChecks
+    post:
+      consumes:
+      - application/json
+      description: Creates a new audit check for a given `search_keyword_url_id`
+      parameters:
+      - description: Audit check payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/audits.CreateAuditCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/audits.AuditCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create audit check
+      tags:
+      - AuditChecks
+  /api/audit_checks/{id}:
+    delete:
+      description: Deletes an audit check by ID
+      parameters:
+      - description: Audit check ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/audits.DeleteAuditCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete audit check
+      tags:
+      - AuditChecks
+    get:
+      description: Fetches an audit check by ID
+      parameters:
+      - description: Audit check ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/audits.AuditCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get audit check
+      tags:
+      - AuditChecks
+    put:
+      consumes:
+      - application/json
+      description: Updates an audit check by ID
+      parameters:
+      - description: Audit check ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Audit check update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/audits.UpdateAuditCheckRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/audits.AuditCheckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update audit check
+      tags:
+      - AuditChecks
+  /api/crawling_sessions:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new crawling session for a SKU
+      parameters:
+      - description: Crawling session payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/sessions.CreateCrawlingSessionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/sessions.CrawlingSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create crawling session
+      tags:
+      - CrawlingSessions
+  /api/crawling_sessions/{id}:
+    get:
+      description: Fetches a crawling session by ID
+      parameters:
+      - description: Crawling session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sessions.CrawlingSessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get crawling session
+      tags:
+      - CrawlingSessions
+  /api/crawling_sessions/{id}/checks_with_pages:
+    get:
+      description: Lists audit checks with their associated pages for a session
+      parameters:
+      - description: Crawling session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comparison session ID
+        in: query
+        name: comparison_crawling_session_id
+        type: integer
+      - description: View filters JSON
+        in: query
+        name: filters
+        type: string
+      - description: Page limit per check
+        in: query
+        name: page_limit_per_check
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sessions.CrawlingSessionChecksResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List checks with pages
+      tags:
+      - CrawlingSessions
+  /api/crawling_sessions/{id}/pages:
+    get:
+      description: Lists pages for a crawling session with optional filters
+      parameters:
+      - description: Crawling session ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: JSON encoded filters
+        in: query
+        name: filters
+        type: string
+      - description: Sort field
+        in: query
+        name: sort
+        type: string
+      - description: Sort direction
+        in: query
+        name: direction
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sessions.CrawlingSessionPagesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List pages for crawling session
+      tags:
+      - CrawlingSessions
+  /api/pages/{id}/page_details:
+    get:
+      description: Returns images/referrers for a page depending on its status
+      parameters:
+      - description: Page ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Search keyword URL ID
+        in: query
+        name: search_keyword_url_id
+        required: true
+        type: integer
+      - description: Result limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/stats.PageDetailsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get page details
+      tags:
+      - Pages
+  /api/stats:
+    get:
+      description: Retrieves stats for a crawling session with optional filters
+      parameters:
+      - description: Crawling session ID
+        in: query
+        name: crawling_session_id
+        required: true
+        type: integer
+      - description: JSON filters
+        in: query
+        name: filters
+        type: string
+      - description: JSON prefilters
+        in: query
+        name: prefilters
+        type: string
+      - description: Comparison session ID
+        in: query
+        name: comparison_crawling_session_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/stats.StatsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Fetch stats
+      tags:
+      - Stats
+  /api/views:
+    get:
+      description: Lists views for a given `search_keyword_url_id`
+      parameters:
+      - description: Search keyword URL ID
+        in: query
+        name: search_keyword_url_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/views.ViewsResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List views
+      tags:
+      - Views
+    post:
+      consumes:
+      - application/json
+      description: Creates a new view
+      parameters:
+      - description: View payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/views.CreateViewRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/views.ViewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create view
+      tags:
+      - Views
+  /api/views/{id}:
+    delete:
+      description: Deletes a view by ID
+      parameters:
+      - description: View ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/views.DeleteViewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete view
+      tags:
+      - Views
+    get:
+      description: Fetches a view by ID
+      parameters:
+      - description: View ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/views.ViewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get view
+      tags:
+      - Views
+    put:
+      consumes:
+      - application/json
+      description: Updates a view by ID
+      parameters:
+      - description: View ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: View update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/views.UpdateViewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/views.ViewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update view
+      tags:
+      - Views
+  /api/views/{id}/page_count:
+    get:
+      description: Returns a count of pages for the given view and optional crawling
+        session filter
+      parameters:
+      - description: View ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: View ID (must match path)
+        in: query
+        name: view_id
+        required: true
+        type: integer
+      - description: Crawling session ID
+        in: query
+        name: crawling_session_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/views.ViewPageCountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: View page count
+      tags:
+      - Views
+  /healthz:
+    get:
+      description: Returns service health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Health check
+      tags:
+      - Health
+  /metrics:
+    get:
+      description: Exposes Prometheus metrics
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Metrics in Prometheus text format
+          schema:
+            type: string
+      summary: Prometheus metrics
+      tags:
+      - Metrics
+securityDefinitions:
+  ApiKeyAuth:
+    description: Access token for authentication
+    in: header
+    name: X-Access-Token
+    type: apiKey
+swagger: "2.0"

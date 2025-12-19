@@ -1,23 +1,34 @@
-package audits
+package sessions
 
 import (
 	"errors"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 
+	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/utils/logger"
 )
 
+// CreateCrawlingSession godoc
+// @Summary Create crawling session
+// @Description Creates a new crawling session for a SKU
+// @Tags CrawlingSessions
+// @Accept json
+// @Produce json
+// @Param request body sessionsDto.CreateCrawlingSessionRequest true "Crawling session payload"
+// @Success 201 {object} sessionsDto.CrawlingSessionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /api/crawling_sessions [post]
 func (ctrl *Controller) Create(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{
-		logger.FieldMethod: "CreateAuditCheck",
+		logger.FieldMethod: "CreateCrawlingSession",
 	}
-	logger.Info(ctx, "audit check create request received", fields)
+	logger.Info(ctx, "create crawling session request received", fields)
 
-	var req auditsDto.CreateAuditCheckRequest
+	var req sessionsDto.CreateCrawlingSessionRequest
 	if err := c.BodyParser(&req); err != nil {
 		fields[logger.FieldError] = err.Error()
 		logger.Error(ctx, "failed to parse request body", fields)
@@ -26,7 +37,7 @@ func (ctrl *Controller) Create(c *fiber.Ctx) error {
 	fields[logger.FieldRequest] = req
 	logger.Info(ctx, "request received", fields)
 
-	if err := validateCreateAuditCheckRequest(req); err != nil {
+	if err := validateCreateSessionRequest(req); err != nil {
 		fields[logger.FieldError] = err.Error()
 		logger.Error(ctx, "validation failed", fields)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -35,12 +46,11 @@ func (ctrl *Controller) Create(c *fiber.Ctx) error {
 	resp, err := ctrl.service.Create(c.Context(), req)
 	if err != nil {
 		fields[logger.FieldError] = err.Error()
-		logger.Error(ctx, "audit check create failed", fields)
+		logger.Error(ctx, "crawling session create failed", fields)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
-
 	fields[logger.FieldResponse] = resp
-	logger.Info(ctx, "audit check created successfully", fields)
+	logger.Info(ctx, "crawling session created successfully", fields)
 
 	if resp.Body == nil {
 		return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})
@@ -48,15 +58,12 @@ func (ctrl *Controller) Create(c *fiber.Ctx) error {
 	return c.Status(resp.StatusCode).JSON(resp.Body)
 }
 
-func validateCreateAuditCheckRequest(req auditsDto.CreateAuditCheckRequest) error {
+func validateCreateSessionRequest(req sessionsDto.CreateCrawlingSessionRequest) error {
 	if req.Data.SearchKeywordURLID == 0 {
 		return errors.New("search_keyword_url_id is required")
 	}
-	if strings.TrimSpace(req.Data.Name) == "" {
-		return errors.New("name is required")
-	}
-	if strings.TrimSpace(req.Data.Category) == "" {
-		return errors.New("category is required")
+	if strings.TrimSpace(req.Data.URL) == "" {
+		return errors.New("url is required")
 	}
 	return nil
 }

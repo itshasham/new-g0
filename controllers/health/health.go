@@ -6,6 +6,7 @@ import (
 	"sitecrawler/newgo/controllers/dto"
 )
 
+// Health godoc
 // @Summary Health check
 // @Description Returns service health status
 // @Tags Health

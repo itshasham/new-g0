@@ -25,6 +25,7 @@ func RegisterRoutes(
 		panic("fiber app cannot be nil")
 	}
 
+	RegisterSwaggerRoutes(app.Group("/swagger"))
 	RegisterHealthCheckRoutes(app.Group("/"))
 	RegisterMetricsRoutes(app.Group("/"), metricsController)
 

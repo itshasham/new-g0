@@ -7,6 +7,17 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// CreateView godoc
+// @Summary Create view
+// @Description Creates a new view
+// @Tags Views
+// @Accept json
+// @Produce json
+// @Param request body viewsDto.CreateViewRequest true "View payload"
+// @Success 201 {object} viewsDto.ViewResponse
+// @Failure 400 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /api/views [post]
 func (ctrl *Controller) Create(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{

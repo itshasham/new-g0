@@ -32,6 +32,19 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// @title SiteCrawler API
+// @version 1.0
+// @description Site Crawler API server
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+// @host localhost:8080
+// @BasePath /
+// @in header
+// @description Access token for authentication
 func main() {
 	ctx := context.Background()
 

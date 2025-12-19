@@ -10,6 +10,7 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// ListCrawlingSessionPages godoc
 // @Summary List pages for crawling session
 // @Description Lists pages for a crawling session with optional filters
 // @Tags CrawlingSessions

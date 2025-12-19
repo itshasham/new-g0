@@ -9,6 +9,16 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// GetAuditCheck godoc
+// @Summary Get audit check
+// @Description Fetches an audit check by ID
+// @Tags AuditChecks
+// @Produce json
+// @Param id path int true "Audit check ID"
+// @Success 200 {object} auditsDto.AuditCheckResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/audit_checks/{id} [get]
 func (ctrl *Controller) Get(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{

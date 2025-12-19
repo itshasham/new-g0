@@ -9,6 +9,16 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// GetView godoc
+// @Summary Get view
+// @Description Fetches a view by ID
+// @Tags Views
+// @Produce json
+// @Param id path int true "View ID"
+// @Success 200 {object} viewsDto.ViewResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/views/{id} [get]
 func (ctrl *Controller) Get(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{

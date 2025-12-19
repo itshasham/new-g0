@@ -9,6 +9,15 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// ListViews godoc
+// @Summary List views
+// @Description Lists views for a given `search_keyword_url_id`
+// @Tags Views
+// @Produce json
+// @Param search_keyword_url_id query int false "Search keyword URL ID"
+// @Success 200 {object} viewsDto.ViewsResponse
+// @Failure 422 {object} map[string]string
+// @Router /api/views [get]
 func (ctrl *Controller) List(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{

@@ -9,8 +9,9 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// PageDetails godoc
 // @Summary Get page details
-// @Description Returns images or referrers for a page depending on its status
+// @Description Returns images/referrers for a page depending on its status
 // @Tags Pages
 // @Produce json
 // @Param id path int true "Page ID"
@@ -19,6 +20,7 @@ import (
 // @Success 200 {object} statsDto.PageDetailsResponse
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
+// @Failure 422 {object} map[string]string
 // @Router /api/pages/{id}/page_details [get]
 func (ctrl *Controller) Details(c *fiber.Ctx) error {
 	ctx := c.UserContext()

@@ -1,29 +1,32 @@
-package sessions
+package audits
 
 import (
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	auditsDto "sitecrawler/newgo/controllers/dto/audits"
 
-	sessionsDto "sitecrawler/newgo/controllers/dto/sessions"
 	"sitecrawler/newgo/utils/logger"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-// @Summary Get crawling session
-// @Description Fetches a crawling session by ID
-// @Tags CrawlingSessions
+// DeleteAuditCheck godoc
+// @Summary Delete audit check
+// @Description Deletes an audit check by ID
+// @Tags AuditChecks
 // @Produce json
-// @Param id path int true "Crawling session ID"
-// @Success 200 {object} sessionsDto.CrawlingSessionResponse
+// @Param id path int true "Audit check ID"
+// @Success 200 {object} auditsDto.DeleteAuditCheckResponse
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
-// @Router /api/crawling_sessions/{id} [get]
-func (ctrl *Controller) Get(c *fiber.Ctx) error {
+// @Failure 422 {object} map[string]string
+// @Router /api/audit_checks/{id} [delete]
+func (ctrl *Controller) Delete(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{
-		logger.FieldMethod: "GetCrawlingSession",
+		logger.FieldMethod: "DeleteAuditCheck",
 	}
-	logger.Info(ctx, "get crawling session request received", fields)
+	logger.Info(ctx, "audit check delete request received", fields)
 
 	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
 	if err != nil {
@@ -32,18 +35,19 @@ func (ctrl *Controller) Get(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	req := sessionsDto.GetCrawlingSessionRequest{ID: id}
+	req := auditsDto.DeleteAuditCheckRequest{ID: id}
 	fields[logger.FieldRequest] = req
 	logger.Info(ctx, "request received", fields)
 
-	resp, err := ctrl.service.Get(c.Context(), req)
+	resp, err := ctrl.service.Delete(c.Context(), req)
 	if err != nil {
 		fields[logger.FieldError] = err.Error()
-		logger.Error(ctx, "crawling session fetch failed", fields)
+		logger.Error(ctx, "audit check delete failed", fields)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
+
 	fields[logger.FieldResponse] = resp
-	logger.Info(ctx, "crawling session fetched successfully", fields)
+	logger.Info(ctx, "audit check deleted successfully", fields)
 
 	if resp.Body == nil {
 		return c.Status(resp.StatusCode).JSON(fiber.Map{"error": resp.Message})

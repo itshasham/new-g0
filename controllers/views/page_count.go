@@ -10,6 +10,19 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// ViewPageCount godoc
+// @Summary View page count
+// @Description Returns a count of pages for the given view and optional crawling session filter
+// @Tags Views
+// @Produce json
+// @Param id path int true "View ID"
+// @Param view_id query int true "View ID (must match path)"
+// @Param crawling_session_id query int false "Crawling session ID"
+// @Success 200 {object} viewsDto.ViewPageCountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /api/views/{id}/page_count [get]
 func (ctrl *Controller) PageCount(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{

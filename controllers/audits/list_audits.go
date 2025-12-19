@@ -10,6 +10,16 @@ import (
 	"sitecrawler/newgo/utils/logger"
 )
 
+// ListAuditChecks godoc
+// @Summary List audit checks
+// @Description Lists audit checks for a given `search_keyword_url_id`
+// @Tags AuditChecks
+// @Produce json
+// @Param search_keyword_url_id query int true "Search keyword URL ID"
+// @Success 200 {object} auditsDto.AuditChecksResponse
+// @Failure 400 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /api/audit_checks [get]
 func (ctrl *Controller) List(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	fields := logger.Fields{
