@@ -1,6 +1,11 @@
 package audits
 
-import "sitecrawler/newgo/models"
+import (
+	"errors"
+	"strings"
+
+	"sitecrawler/newgo/models"
+)
 
 type ListAuditChecksRequest struct {
 	SearchKeywordURLID int64 `json:"search_keyword_url_id"`
@@ -16,6 +21,19 @@ type AuditChecksResponse struct {
 
 type CreateAuditCheckRequest struct {
 	Data CreateAuditCheckData `json:"data"`
+}
+
+func (req CreateAuditCheckRequest) Validate() error {
+	if req.Data.SearchKeywordURLID == 0 {
+		return errors.New("search_keyword_url_id is required")
+	}
+	if strings.TrimSpace(req.Data.Name) == "" {
+		return errors.New("name is required")
+	}
+	if strings.TrimSpace(req.Data.Category) == "" {
+		return errors.New("category is required")
+	}
+	return nil
 }
 
 type CreateAuditCheckData struct {
